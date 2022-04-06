@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+h1:not([data-css-override="true"]) {
+  @apply font-bold text-3xl;
+}
+h2:not([data-css-override="true"]) {
+  @apply font-bold text-xl;
+}
+h3:not([data-css-override="true"]) {
+  @apply font-bold text-lg;
+}
+a:not([data-css-override="true"]) {
+  @apply underline text-blue-800 hover:text-blue-900;
+}
+button:not([data-css-override="true"]) {
+  @apply px-3 py-1 bg-blue-800 hover:bg-blue-900 text-white rounded;
+}
+input:not([data-css-override="true"]) {
+  @apply px-2 py-1 rounded border focus:border-blue-900;
+}
+textarea:not([data-css-override="true"]) {
+  @apply px-2 py-1 rounded border focus:border-blue-900;
+}
+select:not([data-css-override="true"]) {
+  @apply px-2 py-1 rounded border focus:border-blue-900 hover:cursor-pointer;
+}

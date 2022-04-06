@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Address {
+  id            String        @unique @default(uuid())
+  street        String
+  city          String
+  state         String
+  zip           String
+  influencer    Influencer?
+  business      Business?
+}
+
+model Business {
+  id            String        @unique @default(uuid())
+  email         String        @unique
+  passhash      String
+  createdAt     DateTime      @default(now())
+  name          String?
+  phone         String?
+  instagram     String?
+  address       Address?       @relation(fields: [addressId], references: [id])
+  addressId     String?
+  partnerships  Partnership[]
+}
+
+model Influencer {
+  id            String        @unique @default(uuid())
+  email         String        @unique
+  passhash      String
+  createdAt     DateTime      @default(now())
+  name          String?
+  phone         String?
+  instagram     String?
+  paidOnly      Boolean       @default(false)
+  products      Product[]
+  partnerships  Partnership[]
+  address       Address?      @relation(fields: [addressId], references: [id])
+  addressId     String?
+}
+
+model Product {
+  id                String      @unique @default(uuid())
+  influencer        Influencer  @relation(fields: [influencerId], references: [id])
+  influencerId      String
+  name              String
+  price             String
+  inquiryLineItems  InquiryLineItem[]
+}
+
+model Partnership {
+  id            String        @unique @default(uuid())
+  influencer    Influencer    @relation(fields: [influencerId], references: [id])
+  influencerId  String
+  business      Business      @relation(fields: [businessId], references: [id])
+  businessId    String
+  createdAt     DateTime      @default(now())
+  owner         String        @default("business")
+  status        String        @default("drafted")
+  agreement     String?
+  inquiries     Inquiry[]
+}
+
+model Inquiry {
+  id                String            @unique @default(uuid())
+  partnership       Partnership?      @relation(fields: [partnershipId], references: [id])
+  partnershipId     String?
+  createdAt         DateTime          @default(now())
+  to                String            @default("influencer")
+  from              String            @default("business")
+  startDate         DateTime?
+  endDate           DateTime?
+  notes             String?
+  status            String            @default("drafted")
+  counterInquiryId  String?
+  counterInquiry    Inquiry?          @relation("CounterInquiry", fields: [counterInquiryId], references: [id])
+  counter           Inquiry?          @relation("CounterInquiry")
+  inquiryLineItems  InquiryLineItem[]
+}
+
+model InquiryLineItem {
+  id              String    @unique @default(uuid())
+  inquiry         Inquiry   @relation(fields: [inquiryId], references: [id])
+  inquiryId       String
+  createdAt       DateTime  @default(now())
+  product         Product   @relation(fields: [productId], references: [id])
+  productId       String
+  quantity        Int
+  interval        String?
+}
