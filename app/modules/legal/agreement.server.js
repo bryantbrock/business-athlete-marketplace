@@ -4,8 +4,8 @@ import startCase from 'lodash/startCase'
 import aws from 'aws-sdk'
 
 const S3 = new aws.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_KEY
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
 
 const Agreement = ({
@@ -66,8 +66,8 @@ const Agreement = ({
       </ul>
       <br />
       <div style={{display: 'flex', justifyContent: 'space-between'}}>
-        {[influencer, business].map(party => (
-          <div style={{display: 'flex', flexDirection: 'column', margin: '2rem'}}>
+        {[influencer, business].map((party, idx) => (
+          <div key={idx} style={{display: 'flex', flexDirection: 'column', margin: '2rem'}}>
             <span>For {party.name}:</span>
             <div style={{borderTop: '2px solid black', display: 'flex', justifyContent: 'space-between', margin: '2rem 0'}}>
               <span>Authorized Signature</span>

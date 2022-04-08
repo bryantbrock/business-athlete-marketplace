@@ -5,6 +5,7 @@
   "license": "",
   "sideEffects": false,
   "scripts": {
+    "server": "node server.js",
     "build": "npm run build:css && remix build",
     "build:css": "tailwindcss -m -i ./styles/app.css -o app/styles/app.css",
     "dev": "concurrently \"npm run dev:css\" \"remix dev\"",
@@ -25,6 +26,7 @@
     "aws-sdk": "^2.1103.0",
     "bcryptjs": "^2.4.3",
     "classnames": "^2.3.1",
+    "express": "^4.17.3",
     "html-pdf-node": "^1.0.8",
     "lodash": "^4.17.21",
     "react": "^17.0.2",

@@ -11,7 +11,7 @@ import {
 export function meta() {
   return {
     charset: 'utf-8',
-    title: 'New Remix App',
+    title: 'Marketplace',
     viewport: 'width=device-width,initial-scale=1',
   }
 }
