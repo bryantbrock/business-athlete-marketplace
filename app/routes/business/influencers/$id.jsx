@@ -38,9 +38,11 @@ export default () => {
             <li key={idx}>{product.name}</li>
           ))}
         </ul>
-        <form method='post' className='mt-2'>
-          <button type='submit'>Inquire</button>
-        </form>
+        {influencer.products.length > 0 && (
+          <form method='post' className='mt-2'>
+            <button type='submit'>Inquire</button>
+          </form>
+        )}
       </div>
     </div>
   )

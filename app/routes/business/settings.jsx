@@ -27,6 +27,9 @@ export const action = async ({request}) => {
     email: form.get('email'),
     instagram: form.get('instagram'),
     password: form.get('password'),
+    confirmPassword: form.get('confirmPassword'),
+    currentPassword: form.get('currentPassword'),
+    currentPasshash: form.get('currentPasshash'),
     phone: form.get('phone'),
     ...(keys(addressData).length > 0 && {
       address: {
