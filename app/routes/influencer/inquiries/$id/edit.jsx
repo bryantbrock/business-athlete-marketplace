@@ -87,9 +87,9 @@ export const loader = async ({request, params}) => {
     }
   })
 
-  // if (inquiry.status !== INQUIRY.STATUS.drafted) {
-  //   return redirect(`/influencer/inquiries/${params.id}`)
-  // }
+  if (inquiry.status !== INQUIRY.STATUS.drafted) {
+    return redirect(`/influencer/inquiries/${params.id}`)
+  }
 
   return json({inquiry, type: searchParams.get('type')})
 }
@@ -99,7 +99,7 @@ export default () => {
   const {influencer} = inquiry.partnership
   const [lineItems, setLineItems] = useState(inquiry.inquiryLineItems)
 
-  const newItem = {
+  const newItem = influencer.products.length > 0 && {
     quantity: 1,
     interval: 'day',
     product: {
@@ -189,16 +189,18 @@ export default () => {
                 </td>
               </tr>
             ))}
-            <tr>
-              <td>
-                <button onClick={e => {
-                  e.preventDefault()
-                  setLineItems(items => items.concat(newItem))
-                }}>
-                  Add Product
-                </button>
-              </td>
-            </tr>
+            {newItem && (
+              <tr>
+                <td>
+                  <button onClick={e => {
+                    e.preventDefault()
+                    setLineItems(items => items.concat(newItem))
+                  }}>
+                    Add Product
+                  </button>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         <textarea name='notes' defaultValue={inquiry.notes} />
