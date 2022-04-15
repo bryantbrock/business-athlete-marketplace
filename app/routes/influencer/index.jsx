@@ -5,7 +5,7 @@ export default function Index() {
 
   return (
     <div>
-      Dashboard for {influencer.name}
+      <h1>Dashboard for {influencer.name}</h1>
     </div>
   )
 }

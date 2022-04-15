@@ -394,6 +394,56 @@ var app_default = "/build/_assets/app-J2SDOIYR.css";
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
 var import_remix2 = __toESM(require_remix());
+
+// app/utils/misc.js
+init_react();
+var onServer = () => {
+  try {
+    if (window) {
+      return false;
+    }
+  } catch {
+    return true;
+  }
+};
+var inProduction = () => {
+  try {
+    if (false) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+};
+
+// app/utils/email.server.js
+init_react();
+var import_nodemailer = __toESM(require("nodemailer"));
+var import_uuid = require("uuid");
+var sendEmail = ({ error }) => {
+  const transporter = import_nodemailer.default.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      type: "OAUTH2",
+      user: process.env.GMAIL_ADDRESS,
+      clientId: process.env.GMAIL_OAUTH_CLIENT_ID,
+      clientSecret: process.env.GMAIL_OAUTH_CLIENT_SECRET,
+      refreshToken: process.env.GMAIL_OAUTH_REFRESH_TOKEN,
+      accessToken: process.env.GMAIL_OAUTH_ACCESS_TOKEN
+    }
+  });
+  const options = {
+    from: "bandamarketplace@gmail.com",
+    to: "bryantleebrock@gmail.com",
+    subject: `New Error: (id ${(0, import_uuid.v4)()}`,
+    html: `<div style="margin: 20px;">${error}</div>`
+  };
+  transporter.sendMail(options, (error2) => console.log(error2));
+};
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
 function meta() {
   return {
     charset: "utf-8",
@@ -417,6 +467,9 @@ function App() {
   return /* @__PURE__ */ React.createElement(Document, null, /* @__PURE__ */ React.createElement(import_remix2.Outlet, null));
 }
 function ErrorBoundary({ error }) {
+  if (onServer() && inProduction()) {
+    sendEmail({ error });
+  }
   return /* @__PURE__ */ React.createElement(Document, {
     title: "Uh-oh!"
   }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "App Error"), /* @__PURE__ */ React.createElement("pre", null, error.message)));
@@ -798,10 +851,12 @@ var loader4 = async ({ params }) => {
       business: true
     }
   });
+  if (!partnership) {
+    return (0, import_remix7.redirect)("/influencer/partnerships");
+  }
   return (0, import_remix7.json)({ partnership });
 };
 var id_default = () => {
-  const submit = (0, import_remix7.useSubmit)();
   const { partnership } = (0, import_remix7.useLoaderData)();
   const statusBgColor = statusColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
@@ -812,7 +867,8 @@ var id_default = () => {
     className: "text-sm"
   }, (0, import_capitalize.default)(partnership.status)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Details"), /* @__PURE__ */ React.createElement("ul", null, partnership.agreement && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("a", {
     href: partnership.agreement,
-    target: "_blank"
+    target: "_blank",
+    rel: "noreferrer"
   }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Business: ", " ", /* @__PURE__ */ React.createElement(import_remix7.Link, {
     to: `/influencer/businesses/${partnership.business.id}`
   }, partnership.business.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
@@ -887,6 +943,9 @@ init_react();
 var import_remix9 = __toESM(require_remix());
 var loader6 = async ({ request, params }) => {
   const business = await db.business.findUnique({ where: { id: params.id } });
+  if (!business) {
+    return (0, import_remix9.redirect)("/influencer/businesses");
+  }
   return (0, import_remix9.json)({ business });
 };
 var id_default2 = () => {
@@ -912,8 +971,8 @@ init_react();
 var import_html_pdf_node = __toESM(require("html-pdf-node"));
 var import_server2 = require("react-dom/server");
 var import_startCase2 = __toESM(require("lodash/startCase"));
-var import_aws_sdk = __toESM(require("aws-sdk"));
-var S3 = new import_aws_sdk.default.S3({
+var import_aws_sdk = require("aws-sdk");
+var s3 = new import_aws_sdk.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
@@ -977,7 +1036,7 @@ var generateAgreement = async ({ partnershipId, params }) => {
     Bucket: "business-athlete-marketplace",
     ContentType: "application/pdf"
   };
-  const { Location: path } = await S3.upload(opts).promise();
+  const { Location: path } = await s3.upload(opts).promise();
   return path;
 };
 
@@ -985,7 +1044,6 @@ var generateAgreement = async ({ partnershipId, params }) => {
 var import_sum = __toESM(require("lodash/sum"));
 var import_pick = __toESM(require("lodash/pick"));
 var import_map = __toESM(require("lodash/map"));
-var import_omit2 = __toESM(require("lodash/omit"));
 var rejectInquiry = ({ id }) => {
   return db.inquiry.update({
     where: { id },
@@ -1103,13 +1161,16 @@ var loader7 = async ({ params }) => {
       }
     }
   });
+  if (!inquiry) {
+    return (0, import_remix11.redirect)("/influencer/inquiries");
+  }
   return (0, import_remix11.json)({ inquiry });
 };
 var id_default4 = () => {
   const { inquiry } = (0, import_remix11.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", Boolean(inquiry.counterInquiryId) ? "Yes" : "No")), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No")), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
   }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix11.Link, {
     to: `/influencer/inquiries/${inquiry.id}/edit`
@@ -1140,7 +1201,7 @@ var import_remix12 = __toESM(require_remix());
 var import_partition = __toESM(require("lodash/partition"));
 var import_keys3 = __toESM(require("lodash/keys"));
 var import_filter = __toESM(require("lodash/filter"));
-var import_omit3 = __toESM(require("lodash/omit"));
+var import_omit2 = __toESM(require("lodash/omit"));
 var import_toPairs = __toESM(require("lodash/toPairs"));
 var import_startCase4 = __toESM(require("lodash/startCase"));
 var action2 = async ({ request, params }) => {
@@ -1163,7 +1224,7 @@ var action2 = async ({ request, params }) => {
   const data = (0, import_filter.default)(otherEntries, ([k, v]) => Boolean(v)).reduce((acc, [k, v]) => __spreadProps(__spreadValues({}, acc), { [k]: v }), {});
   const lineItems = lineItemEntries.map((obj) => {
     const [{ id }] = influencerProducts.filter((prod) => prod.name === obj.name);
-    return __spreadProps(__spreadValues({}, (0, import_omit3.default)(obj, ["name", "id"])), {
+    return __spreadProps(__spreadValues({}, (0, import_omit2.default)(obj, ["name", "id"])), {
       product: { connect: { id } },
       quantity: Number(obj.quantity)
     });
@@ -1171,7 +1232,7 @@ var action2 = async ({ request, params }) => {
   await db.inquiryLineItem.deleteMany({ where: { inquiry: { is: { id: params.id } } } });
   await db.inquiry.update({
     where: { id: params.id },
-    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit3.default)(data, ["influencerId"])), {
+    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit2.default)(data, ["influencerId"])), {
       status
     }), data.startDate && { startDate: new Date(data.startDate).toISOString() }), data.endDate && { endDate: new Date(data.endDate).toISOString() }), {
       inquiryLineItems: {
@@ -1202,13 +1263,16 @@ var loader8 = async ({ request, params }) => {
       }
     }
   });
+  if (inquiry.status !== INQUIRY.STATUS.drafted) {
+    return (0, import_remix12.redirect)(`/influencer/inquiries/${params.id}`);
+  }
   return (0, import_remix12.json)({ inquiry, type: searchParams.get("type") });
 };
 var edit_default = () => {
   const { inquiry, type } = (0, import_remix12.useLoaderData)();
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react.useState)(inquiry.inquiryLineItems);
-  const newItem = {
+  const newItem = influencer.products.length > 0 && {
     quantity: 1,
     interval: "day",
     product: {
@@ -1293,7 +1357,7 @@ var edit_default = () => {
       e.preventDefault();
       setLineItems((items) => items.filter((v, i) => i !== idx));
     }
-  }, "Remove Product")))), /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("button", {
+  }, "Remove Product")))), newItem && /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("button", {
     onClick: (e) => {
       e.preventDefault();
       setLineItems((items) => items.concat(newItem));
@@ -1358,6 +1422,7 @@ var addProduct = async ({ form, request }) => {
 };
 var deleteProduct = async ({ form }) => {
   const id = form.get("id");
+  console.log(id);
   await db.product.delete({ where: { id } });
 };
 var action3 = async ({ request }) => {
@@ -1658,7 +1723,7 @@ function Index2() {
     var _a;
     return (_a = item.data) == null ? void 0 : _a.influencer;
   });
-  return /* @__PURE__ */ React.createElement("div", null, "Dashboard for ", influencer.name);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "Dashboard for ", influencer.name));
 }
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/login.jsx
@@ -1830,7 +1895,7 @@ __export(id_exports5, {
 init_react();
 var import_remix21 = __toESM(require_remix());
 var import_capitalize2 = __toESM(require("lodash/capitalize"));
-var statusColors2 = {
+var statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: "bg-yellow-200",
   [PARTNERSHIP.STATUS.active]: "bg-green-200",
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
@@ -1844,11 +1909,14 @@ var loader14 = async ({ params }) => {
       influencer: true
     }
   });
+  if (!partnership) {
+    return (0, import_remix21.redirect)("/business/partnerships");
+  }
   return (0, import_remix21.json)({ partnership });
 };
 var id_default5 = () => {
   const { partnership } = (0, import_remix21.useLoaderData)();
-  const statusBgColor = statusColors2[partnership.status];
+  const statusBgColor = statusBgColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
   }, /* @__PURE__ */ React.createElement("h1", null, "Partnership with ", partnership.influencer.name), /* @__PURE__ */ React.createElement("div", {
@@ -1857,7 +1925,8 @@ var id_default5 = () => {
     className: "text-sm"
   }, (0, import_capitalize2.default)(partnership.status)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Details"), /* @__PURE__ */ React.createElement("ul", null, partnership.agreement && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("a", {
     href: partnership.agreement,
-    target: "_blank"
+    target: "_blank",
+    rel: "noreferrer"
   }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix21.Link, {
     to: `/business/influencers/${partnership.influencer.id}`
   }, partnership.influencer.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
@@ -1909,6 +1978,9 @@ var loader15 = async ({ params }) => {
     where: { id: params.id },
     include: { products: true }
   });
+  if (!influencer) {
+    return (0, import_remix22.redirect)("/business/influencers");
+  }
   return (0, import_remix22.json)({ influencer });
 };
 var id_default6 = () => {
@@ -2019,6 +2091,9 @@ var loader17 = async ({ params }) => {
       }
     }
   });
+  if (!inquiry) {
+    return (0, import_remix26.redirect)("/business/inquiries");
+  }
   return (0, import_remix26.json)({ inquiry });
 };
 var id_default8 = () => {
@@ -2058,7 +2133,7 @@ var import_remix27 = __toESM(require_remix());
 var import_partition2 = __toESM(require("lodash/partition"));
 var import_keys6 = __toESM(require("lodash/keys"));
 var import_filter2 = __toESM(require("lodash/filter"));
-var import_omit4 = __toESM(require("lodash/omit"));
+var import_omit3 = __toESM(require("lodash/omit"));
 var import_toPairs2 = __toESM(require("lodash/toPairs"));
 var import_startCase8 = __toESM(require("lodash/startCase"));
 var action9 = async ({ request, params }) => {
@@ -2083,7 +2158,7 @@ var action9 = async ({ request, params }) => {
   const data = (0, import_filter2.default)(otherEntries, ([k, v]) => Boolean(v)).reduce((acc, [k, v]) => __spreadProps(__spreadValues({}, acc), { [k]: v }), {});
   const lineItems = lineItemEntries.map((obj) => {
     const [{ id }] = influencerProducts.filter((prod) => prod.name === obj.name);
-    return __spreadProps(__spreadValues({}, (0, import_omit4.default)(obj, ["name", "id"])), {
+    return __spreadProps(__spreadValues({}, (0, import_omit3.default)(obj, ["name", "id"])), {
       product: { connect: { id } },
       quantity: Number(obj.quantity)
     });
@@ -2091,7 +2166,7 @@ var action9 = async ({ request, params }) => {
   await db.inquiryLineItem.deleteMany({ where: { inquiry: { is: { id: params.id } } } });
   await db.inquiry.update({
     where: { id: params.id },
-    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit4.default)(data, ["influencerId", "partnershipId", "partnershipStatus"])), {
+    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit3.default)(data, ["influencerId", "partnershipId", "partnershipStatus"])), {
       status
     }), data.startDate && { startDate: new Date(data.startDate).toISOString() }), data.endDate && { endDate: new Date(data.endDate).toISOString() }), {
       inquiryLineItems: {
@@ -2137,7 +2212,7 @@ var edit_default2 = () => {
   const { inquiry, type } = (0, import_remix27.useLoaderData)();
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react2.useState)(inquiry.inquiryLineItems);
-  const newItem = {
+  const newItem = influencer.products.length > 0 && {
     quantity: 1,
     interval: "day",
     product: {
@@ -2230,7 +2305,7 @@ var edit_default2 = () => {
       e.preventDefault();
       setLineItems((items) => items.filter((v, i) => i !== idx));
     }
-  }, "Remove Product")))), /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("button", {
+  }, "Remove Product")))), newItem && /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("button", {
     onClick: (e) => {
       e.preventDefault();
       setLineItems((items) => items.concat(newItem));
@@ -2523,7 +2598,7 @@ var loader21 = () => (0, import_remix32.redirect)("/business");
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
 init_react();
-var assets_manifest_default = { "version": "3a5db348", "entry": { "module": "/build/entry.client-BF22FPZB.js", "imports": ["/build/_shared/chunk-SQG6SUUV.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-SO7F35RI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-GCPA66Y4.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-AAP7EWST.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-YX46KQPN.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-5SZSFOMN.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-I7CWYIKP.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-GWYBVLL7.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-EH6POGZB.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-33G44UIK.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-BLSMLB6S.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-VILSH4PC.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-JMAWISUG.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-ZW2NCGFT.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-QQOIYBLV.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-NPDNIMXL.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-JMMUXDCA.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-2JD42SZP.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-XXO75VSC.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-IK6KKT7P.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-RZFVNZTG.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-K5VPDAOB.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-TLAFTSTO.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-S26HUFGC.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-PTNLIJZO.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-M5VURKW4.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-7XZR3NP7.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-XNEGG72I.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-3RIFRPEP.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-WVCFHS3D.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-3A5DB348.js" };
+var assets_manifest_default = { "version": "2d437731", "entry": { "module": "/build/entry.client-5PDLM7XZ.js", "imports": ["/build/_shared/chunk-QO72BVG2.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-OOBDMLYI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-5P6DYX76.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-GTFZSHCF.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-5R3GKZYG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-QJTVG6WG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-LFKZGLGU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-RNIV6MKS.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-OZ7RY2JW.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-B7PIHIGL.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-2552SL7M.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-O5KJUBBV.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-WYXH5TFW.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-GFCL7E5D.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-Y2VY5T52.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-AFOB377H.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-J7XRGJHS.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-MJ7HJ26M.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-VAXEQLWT.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-ITYCECKU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-GWZM5L4A.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-FHBOPE5R.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-TR7IWVVF.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-DHJT7OD3.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-JKRUKGG5.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-OZNUX6Q4.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-UYTLPICQ.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-VEHWOVRO.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-MWF7X7VA.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-K6HEVX4V.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-2D437731.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var entry = { module: entry_server_exports };

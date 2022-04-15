@@ -4,7 +4,6 @@ import {db} from '~/utils/db.server'
 import sum from 'lodash/sum'
 import pick from 'lodash/pick'
 import map from 'lodash/map'
-import omit from 'lodash/omit'
 
 export const rejectInquiry = ({id}) => {
   return db.inquiry.update({

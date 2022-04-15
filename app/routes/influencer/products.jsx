@@ -20,6 +20,7 @@ const addProduct = async ({form, request}) => {
 
 const deleteProduct = async ({form}) => {
   const id = form.get('id')
+  console.log(id)
 
   await db.product.delete({where: {id}})
 }

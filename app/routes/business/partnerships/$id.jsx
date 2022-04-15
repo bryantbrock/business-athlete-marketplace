@@ -1,9 +1,9 @@
-import {Link, json, useLoaderData} from 'remix'
+import {Link, json, useLoaderData, redirect} from 'remix'
 import {db} from '~/utils/db.server'
 import {PARTNERSHIP} from '~/utils/constants'
 import capitalize from 'lodash/capitalize'
 
-const statusColors = {
+const statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: 'bg-yellow-200',
   [PARTNERSHIP.STATUS.active]: 'bg-green-200',
   [PARTNERSHIP.STATUS.closed]: 'bg-gray-200',
@@ -19,12 +19,16 @@ export const loader = async ({params}) => {
     }
   })
 
+  if (!partnership) {
+    return redirect('/business/partnerships')
+  }
+
   return json({partnership})
 }
 
 export default () => {
   const {partnership} = useLoaderData()
-  const statusBgColor = statusColors[partnership.status]
+  const statusBgColor = statusBgColors[partnership.status]
 
   return (
     <div>
@@ -40,7 +44,7 @@ export default () => {
         <ul>
           {partnership.agreement && (
             <li>
-              <a href={partnership.agreement} target='_blank'>
+              <a href={partnership.agreement} target='_blank' rel="noreferrer">
                 Contract
               </a>
             </li>

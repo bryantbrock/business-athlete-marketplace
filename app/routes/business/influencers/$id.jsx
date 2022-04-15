@@ -22,6 +22,10 @@ export const loader = async ({params}) => {
     include: {products: true}
   })
 
+  if (!influencer) {
+    return redirect('/business/influencers')
+  }
+
   return json({influencer})
 }
 

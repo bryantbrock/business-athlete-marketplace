@@ -1,4 +1,4 @@
-import {json, Link, useLoaderData} from 'remix'
+import {json, Link, useLoaderData, redirect} from 'remix'
 import startCase from 'lodash/startCase'
 import {db} from '~/utils/db.server'
 import {INQUIRY} from '~/utils/constants'
@@ -13,6 +13,10 @@ export const loader = async ({params}) => {
       }
     }
   })
+
+  if (!inquiry) {
+    return redirect('/influencer/inquiries')
+  }
 
   return json({inquiry})
 }
@@ -32,7 +36,7 @@ export default () => {
           <li><strong>Start Date:</strong> {(new Date(inquiry.startDate)).toLocaleDateString()}</li>
           <li><strong>End Date:</strong> {(new Date(inquiry.endDate)).toLocaleDateString()}</li>
           <li><strong>Notes:</strong> {inquiry.notes}</li>
-          <li><strong>Countered?</strong> {Boolean(inquiry.counterInquiryId) ? 'Yes' : 'No'}</li>
+          <li><strong>Countered?</strong> {inquiry.counterInquiryId ? 'Yes' : 'No'}</li>
         </ul>
         <ul>
           {inquiry.inquiryLineItems.map(({product, quantity, interval}, idx) => (

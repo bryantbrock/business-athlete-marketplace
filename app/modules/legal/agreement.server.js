@@ -1,9 +1,9 @@
 import htmlToPdf from 'html-pdf-node'
 import {renderToString} from 'react-dom/server'
 import startCase from 'lodash/startCase'
-import aws from 'aws-sdk'
+import {S3} from 'aws-sdk'
 
-const S3 = new aws.S3({
+const s3 = new S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
@@ -102,7 +102,7 @@ export const generateAgreement = async ({partnershipId, params}) => {
     ContentType: 'application/pdf',
   }
 
-  const {Location: path} = await S3.upload(opts).promise()
+  const {Location: path} = await s3.upload(opts).promise()
 
   return path
 }

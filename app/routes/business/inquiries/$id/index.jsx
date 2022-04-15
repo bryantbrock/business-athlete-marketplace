@@ -1,4 +1,4 @@
-import {json, Link, useLoaderData} from 'remix'
+import {json, Link, redirect, useLoaderData} from 'remix'
 import startCase from 'lodash/startCase'
 import {db} from '~/utils/db.server'
 import {INQUIRY} from '~/utils/constants'
@@ -13,6 +13,10 @@ export const loader = async ({params}) => {
       }
     }
   })
+
+  if (!inquiry) {
+    return redirect('/business/inquiries')
+  }
 
   return json({inquiry})
 }

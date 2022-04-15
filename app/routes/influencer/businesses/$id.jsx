@@ -1,8 +1,12 @@
-import {Link, json, useLoaderData} from 'remix'
+import {json, redirect, useLoaderData} from 'remix'
 import {db} from '~/utils/db.server'
 
 export const loader = async ({request, params}) => {
   const business = await db.business.findUnique({where: {id: params.id}})
+
+  if (!business) {
+    return redirect('/influencer/businesses')
+  }
 
   return json({business})
 }

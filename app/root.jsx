@@ -7,6 +7,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'remix'
+import {onServer, inProduction} from './utils/misc'
+import {sendEmail} from './utils/email.server'
 
 export function meta() {
   return {
@@ -48,6 +50,10 @@ export default function App() {
 }
 
 export function ErrorBoundary({error}) {
+  if (onServer() && inProduction()) {
+    sendEmail({error})
+  }
+
   return (
     <Document title='Uh-oh!'>
       <div>

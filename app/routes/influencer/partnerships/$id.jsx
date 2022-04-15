@@ -1,4 +1,4 @@
-import {Link, json, useSubmit, useLoaderData} from 'remix'
+import {Link, json, useLoaderData, redirect} from 'remix'
 import capitalize from 'lodash/capitalize'
 import startCase from 'lodash/startCase'
 import {db} from '~/utils/db.server'
@@ -29,11 +29,14 @@ export const loader = async ({params}) => {
     }
   })
 
+  if (!partnership) {
+    return redirect('/influencer/partnerships')
+  }
+
   return json({partnership})
 }
 
 export default () => {
-  const submit = useSubmit()
   const {partnership} = useLoaderData()
   const statusBgColor = statusColors[partnership.status]
 
@@ -51,7 +54,7 @@ export default () => {
         <ul>
           {partnership.agreement && (
             <li>
-              <a href={partnership.agreement} target='_blank'>
+              <a href={partnership.agreement} target='_blank' rel="noreferrer">
                 Contract
               </a>
             </li>
