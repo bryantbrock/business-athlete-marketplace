@@ -78,7 +78,7 @@ export default () => {
         </button>
       </form>
       {products.map(({id, name, price}) => (
-        <div key={id} className='p-2 shadow rounded-lg flex justify-between'>
+        <div key={id} className='p-2 shadow rounded-lg flex justify-between' data-cy="product-parent">
           <div className='flex flex-col ml-2'>
             <span><strong>Name:</strong> {startCase(name)}</span>
             <span><strong>Price:</strong> ${price}</span>

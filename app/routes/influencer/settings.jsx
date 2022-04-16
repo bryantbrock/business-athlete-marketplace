@@ -9,6 +9,12 @@ export const action = async ({request}) => {
     request.formData(),
     Auth.influencer.get({request, include: {address: true}}),
   ])
+  const action = form.get('_action')
+
+  if (action === 'delete') {
+    await db.influencer.delete({where: {id: influencerId}})
+    return redirect('/influencer/login')
+  }
 
   const street = form.get('street')
   const city = form.get('city')
@@ -41,7 +47,11 @@ export const action = async ({request}) => {
     })
   }
 
-  await Auth.influencer.update({id: influencerId, data})
+  const res = await Auth.influencer.update({id: influencerId, data})
+
+  if (res.errors) {
+    return res
+  }
 
   return redirect((new URL(request.url).pathname))
 }
@@ -66,16 +76,21 @@ export default () => {
         <Input data={data} name='email' type='email' defaultValue={influencer.email} />
         <Input data={data} name='phone' type='number' defaultValue={influencer.phone} />
         <Input data={data} name='instagram' defaultValue={influencer.instagram} />
-        <Input data={data} name='street' defaultValue={influencer.street} />
-        <Input data={data} name='city' defaultValue={influencer.city} />
-        <Input data={data} name='state' defaultValue={influencer.state} />
-        <Input data={data} name='zip' defaultValue={influencer.zip} />
+        <Input data={data} name='street' defaultValue={influencer.address?.street} />
+        <Input data={data} name='city' defaultValue={influencer.address?.city} />
+        <Input data={data} name='state' defaultValue={influencer.address?.state} />
+        <Input data={data} name='zip' defaultValue={influencer.address?.zip} />
         <Input data={data} name='currentPassword' type='password' />
         <Input data={data} name='password' type='password' />
         <Input data={data} name='confirmPassword' type='password' />
-        <button type='submit' className='button'>
-          Submit
-        </button>
+        <div className='flex gap-2'>
+          <button type='submit' name="_action" value="update" className='button'>
+            Update
+          </button>
+          <button hidden type='submit' name="_action" value="delete" className='button'>
+            Delete
+          </button>
+        </div>
       </form>
     </div>
   )

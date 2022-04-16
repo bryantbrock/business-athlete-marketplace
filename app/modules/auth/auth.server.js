@@ -1,5 +1,6 @@
 import keys from 'lodash/keys'
 import omit from 'lodash/omit'
+import pick from 'lodash/pick'
 import bcrypt from 'bcryptjs'
 import {db} from '~/utils/db.server'
 import {createCookieSessionStorage, redirect} from 'remix'
@@ -82,6 +83,10 @@ const login = module => async ({email, password}) => {
     return {errors: {email: `A ${module} account with that email was not found.`}}
   }
 
+  if (account.isDeleted) {
+    return {errors: {email: `A ${module} account with that email has been deleted.`}}
+  }
+
   const passwordMatches = await bcrypt.compare(password, account.passhash)
 
   if (!passwordMatches) {
@@ -155,14 +160,16 @@ const update = module => async ({id, data}) => {
   }
 
   try {
-    const salt = await bcrypt.genSalt(10)
-    const passhash = await bcrypt.hash(data.password, salt)
-
     const updatedAccount = await db[module].update({
       where: {id},
       data: {
-        ...omit(data, ['password', 'currentPassword', 'currentPasshash', 'confirmPassword']),
-        passhash
+        ...pick(data, ['name', 'email', 'instagram', 'phone', 'address']),
+        ...(data.password && {
+          passhash: await bcrypt.hash(
+            data.password,
+            await bcrypt.genSalt(10)
+          )
+        })
       }
     })
 

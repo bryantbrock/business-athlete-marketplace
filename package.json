@@ -5,16 +5,17 @@
   "license": "",
   "sideEffects": false,
   "scripts": {
-    "build": "npm run build:css && remix build",
+    "build": "yarn build:css && remix build",
     "build:css": "tailwindcss -m -i ./styles/app.css -o app/styles/app.css",
-    "dev": "concurrently \"npm run dev:css\" \"remix dev\"",
+    "dev": "concurrently \"yarn dev:css\" \"remix dev\"",
     "dev:css": "tailwindcss -w -i ./styles/app.css -o app/styles/app.css",
     "postinstall": "remix setup node",
     "start": "node server.js",
     "prisma:migrate": "npx prisma migrate dev && npx prisma generate",
     "prisma:seed": "npx prisma db seed",
     "db:reset": "dropdb business-athlete-marketplace && createdb business-athlete-marketplace && yarn prisma:migrate",
-    "cy:open": "npx cypress open"
+    "cy:open": "npx cypress open",
+    "test": "docker run --ipc=host -it -v $PWD:/e2e -w /e2e -e CYPRESS_baseUrl=http://host.docker.internal:3000 -e CYPRESS_VIDEO=false cypress/included:3.3.1"
   },
   "prisma": {
     "seed": "node --require esbuild-register prisma/seed.js"

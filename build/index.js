@@ -390,7 +390,7 @@ __export(root_exports, {
 init_react();
 
 // app/styles/app.css
-var app_default = "/build/_assets/app-J2SDOIYR.css";
+var app_default = "/build/_assets/app-E5YXHXAM.css";
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
 var import_remix2 = __toESM(require_remix());
@@ -488,6 +488,7 @@ var import_remix4 = __toESM(require_remix());
 init_react();
 var import_keys = __toESM(require("lodash/keys"));
 var import_omit = __toESM(require("lodash/omit"));
+var import_pick = __toESM(require("lodash/pick"));
 var import_bcryptjs = __toESM(require("bcryptjs"));
 
 // app/utils/db.server.js
@@ -566,6 +567,9 @@ var login = (module2) => async ({ email, password }) => {
   if (!account) {
     return { errors: { email: `A ${module2} account with that email was not found.` } };
   }
+  if (account.isDeleted) {
+    return { errors: { email: `A ${module2} account with that email has been deleted.` } };
+  }
   const passwordMatches = await import_bcryptjs.default.compare(password, account.passhash);
   if (!passwordMatches) {
     return { errors: { password: "Incorrect password." } };
@@ -619,12 +623,10 @@ var update = (module2) => async ({ id, data }) => {
     return { errors };
   }
   try {
-    const salt = await import_bcryptjs.default.genSalt(10);
-    const passhash = await import_bcryptjs.default.hash(data.password, salt);
     const updatedAccount = await db[module2].update({
       where: { id },
-      data: __spreadProps(__spreadValues({}, (0, import_omit.default)(data, ["password", "currentPassword", "currentPasshash", "confirmPassword"])), {
-        passhash
+      data: __spreadValues(__spreadValues({}, (0, import_pick.default)(data, ["name", "email", "instagram", "phone", "address"])), data.password && {
+        passhash: await import_bcryptjs.default.hash(data.password, await import_bcryptjs.default.genSalt(10))
       })
     });
     return (0, import_omit.default)(updatedAccount, ["passhash"]);
@@ -797,23 +799,35 @@ var partnerships_default = () => {
   }, id, ' - status "', status, '"'))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/businesses/index.jsx
-var businesses_exports = {};
-__export(businesses_exports, {
-  default: () => businesses_default,
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/reactivate/$email.jsx
+var email_exports = {};
+__export(email_exports, {
   loader: () => loader3
 });
 init_react();
 var import_remix6 = __toESM(require_remix());
-var loader3 = async () => {
+var loader3 = async ({ params }) => {
+  await db.influencer.update({ where: { email: params.email }, data: { isDeleted: false } });
+  return (0, import_remix6.redirect)("/influencer/login");
+};
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/businesses/index.jsx
+var businesses_exports = {};
+__export(businesses_exports, {
+  default: () => businesses_default,
+  loader: () => loader4
+});
+init_react();
+var import_remix7 = __toESM(require_remix());
+var loader4 = async () => {
   const businesses = await db.business.findMany({ take: 5 });
-  return (0, import_remix6.json)({ businesses });
+  return (0, import_remix7.json)({ businesses });
 };
 var businesses_default = () => {
-  const { businesses } = (0, import_remix6.useLoaderData)();
+  const { businesses } = (0, import_remix7.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Browse Businesses"), /* @__PURE__ */ React.createElement("ul", null, businesses.map(({ id, email }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix6.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix7.Link, {
     to: `/influencer/businesses/${id}`
   }, email))))));
 };
@@ -822,10 +836,10 @@ var businesses_default = () => {
 var id_exports = {};
 __export(id_exports, {
   default: () => id_default,
-  loader: () => loader4
+  loader: () => loader5
 });
 init_react();
-var import_remix7 = __toESM(require_remix());
+var import_remix8 = __toESM(require_remix());
 var import_capitalize = __toESM(require("lodash/capitalize"));
 var import_startCase = __toESM(require("lodash/startCase"));
 var statusColors = {
@@ -834,7 +848,7 @@ var statusColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader4 = async ({ request, params }) => {
+var loader5 = async ({ request, params }) => {
   const influencerId = await auth_server_default.getSessionId({ request });
   const [partnership] = await db.partnership.findMany({
     where: { AND: [
@@ -856,12 +870,12 @@ var loader4 = async ({ request, params }) => {
     }
   });
   if (!partnership) {
-    return (0, import_remix7.redirect)("/influencer/partnerships");
+    return (0, import_remix8.redirect)("/influencer/partnerships");
   }
-  return (0, import_remix7.json)({ partnership });
+  return (0, import_remix8.json)({ partnership });
 };
 var id_default = () => {
-  const { partnership } = (0, import_remix7.useLoaderData)();
+  const { partnership } = (0, import_remix8.useLoaderData)();
   const statusBgColor = statusColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
@@ -873,7 +887,7 @@ var id_default = () => {
     href: partnership.agreement,
     target: "_blank",
     rel: "noreferrer"
-  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Business: ", " ", /* @__PURE__ */ React.createElement(import_remix7.Link, {
+  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Business: ", " ", /* @__PURE__ */ React.createElement(import_remix8.Link, {
     to: `/influencer/businesses/${partnership.business.id}`
   }, partnership.business.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col mt-5 md:flex-row md:mt-0"
@@ -883,13 +897,13 @@ var id_default = () => {
     className: "my-2"
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex"
-  }, /* @__PURE__ */ React.createElement(import_remix7.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix8.Link, {
     to: `/influencer/inquiries?partnershipId=${partnership.id}`,
     "data-css-override": true,
     className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
   }, "See all inquiries")), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col border rounded shadow"
-  }, partnership.inquiries.map(({ id, createdAt, status, inquiryLineItems }) => /* @__PURE__ */ React.createElement(import_remix7.Link, {
+  }, partnership.inquiries.map(({ id, createdAt, status, inquiryLineItems }) => /* @__PURE__ */ React.createElement(import_remix8.Link, {
     key: id,
     "data-css-override": true,
     to: `/influencer/inquiries/${id}`
@@ -904,11 +918,11 @@ var id_default = () => {
 var inquiries_exports = {};
 __export(inquiries_exports, {
   default: () => inquiries_default,
-  loader: () => loader5
+  loader: () => loader6
 });
 init_react();
-var import_remix8 = __toESM(require_remix());
-var loader5 = async ({ request }) => {
+var import_remix9 = __toESM(require_remix());
+var loader6 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   const influencerId = await auth_server_default.getSessionId({ request });
   const inquiries = await db.inquiry.findMany({
@@ -926,13 +940,13 @@ var loader5 = async ({ request }) => {
     skip: 0,
     take: 20
   });
-  return (0, import_remix8.json)({ inquiries, pathname });
+  return (0, import_remix9.json)({ inquiries, pathname });
 };
 var inquiries_default = () => {
-  const { inquiries, pathname } = (0, import_remix8.useLoaderData)();
+  const { inquiries, pathname } = (0, import_remix9.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiries"), /* @__PURE__ */ React.createElement("ul", null, inquiries.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix8.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix9.Link, {
     to: pathname + "/" + id
   }, id, ' - status "', status, '"'))))));
 };
@@ -941,19 +955,19 @@ var inquiries_default = () => {
 var id_exports2 = {};
 __export(id_exports2, {
   default: () => id_default2,
-  loader: () => loader6
+  loader: () => loader7
 });
 init_react();
-var import_remix9 = __toESM(require_remix());
-var loader6 = async ({ request, params }) => {
+var import_remix10 = __toESM(require_remix());
+var loader7 = async ({ request, params }) => {
   const business = await db.business.findUnique({ where: { id: params.id } });
   if (!business) {
-    return (0, import_remix9.redirect)("/influencer/businesses");
+    return (0, import_remix10.redirect)("/influencer/businesses");
   }
-  return (0, import_remix9.json)({ business });
+  return (0, import_remix10.json)({ business });
 };
 var id_default2 = () => {
-  const { business } = (0, import_remix9.useLoaderData)();
+  const { business } = (0, import_remix10.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Business selected: ", business.name));
 };
 
@@ -962,10 +976,10 @@ var id_exports3 = {};
 __export(id_exports3, {
   action: () => action,
   default: () => id_default3,
-  loader: () => loader7
+  loader: () => loader8
 });
 init_react();
-var import_remix10 = __toESM(require_remix());
+var import_remix11 = __toESM(require_remix());
 var import_keys2 = __toESM(require("lodash/keys"));
 
 // app/modules/inquiry/actions.server.js
@@ -1047,7 +1061,7 @@ var generateAgreement = async ({ partnershipId, params }) => {
 
 // app/modules/inquiry/actions.server.js
 var import_sum = __toESM(require("lodash/sum"));
-var import_pick = __toESM(require("lodash/pick"));
+var import_pick2 = __toESM(require("lodash/pick"));
 var import_map = __toESM(require("lodash/map"));
 var rejectInquiry = ({ id }) => {
   return db.inquiry.update({
@@ -1108,12 +1122,12 @@ var counterInquiry = async ({ id }) => {
     where: { id },
     include: { inquiryLineItems: true }
   });
-  const newInquiry = await db.inquiry.create({ data: __spreadProps(__spreadValues({}, (0, import_pick.default)(inquiry, ["startDate", "endDate", "notes"])), {
+  const newInquiry = await db.inquiry.create({ data: __spreadProps(__spreadValues({}, (0, import_pick2.default)(inquiry, ["startDate", "endDate", "notes"])), {
     to: inquiry.from,
     from: inquiry.to,
     partnership: { connect: { id: inquiry.partnershipId } },
     inquiryLineItems: {
-      create: inquiry.inquiryLineItems.map((lineItem) => __spreadProps(__spreadValues({}, (0, import_pick.default)(lineItem, ["quantity", "interval"])), { product: { connect: { id: lineItem.productId } } }))
+      create: inquiry.inquiryLineItems.map((lineItem) => __spreadProps(__spreadValues({}, (0, import_pick2.default)(lineItem, ["quantity", "interval"])), { product: { connect: { id: lineItem.productId } } }))
     }
   }) });
   await db.inquiry.update({
@@ -1193,11 +1207,11 @@ var action = async ({ request, params }) => {
   }
   if (action14 === INQUIRY.STATUS.countered) {
     const { id: newInquiryId } = await counterInquiry({ id });
-    return (0, import_remix10.redirect)(`/influencer/inquiries/${newInquiryId}/edit?type=counter`);
+    return (0, import_remix11.redirect)(`/influencer/inquiries/${newInquiryId}/edit?type=counter`);
   }
-  return (0, import_remix10.json)({});
+  return (0, import_remix11.json)({});
 };
-var loader7 = async ({ request, params }) => {
+var loader8 = async ({ request, params }) => {
   const influencerId = await auth_server_default.getSessionId({ request });
   const [inquiry] = await db.inquiry.findMany({
     where: { AND: [
@@ -1224,12 +1238,12 @@ var loader7 = async ({ request, params }) => {
     }
   });
   if (!inquiry) {
-    return (0, import_remix10.redirect)("/influencer/inquiries");
+    return (0, import_remix11.redirect)("/influencer/inquiries");
   }
-  return (0, import_remix10.json)({ inquiry });
+  return (0, import_remix11.json)({ inquiry });
 };
 var id_default3 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix10.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix11.Outlet, null);
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/index.jsx
@@ -1238,14 +1252,14 @@ __export(id_exports4, {
   default: () => id_default4
 });
 init_react();
-var import_remix12 = __toESM(require_remix());
+var import_remix13 = __toESM(require_remix());
 var import_startCase3 = __toESM(require("lodash/startCase"));
 
 // app/utils/hooks/useParentLoaderData.js
 init_react();
-var import_remix11 = __toESM(require_remix());
+var import_remix12 = __toESM(require_remix());
 var useParentLoaderData = ({ key }) => {
-  const match = (0, import_remix11.useMatches)().find(({ data }) => data && data[key]);
+  const match = (0, import_remix12.useMatches)().find(({ data }) => data && data[key]);
   return match ? { [key]: match.data[key] } : {};
 };
 
@@ -1254,11 +1268,11 @@ var id_default4 = () => {
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No"), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix12.Link, {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No"), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix13.Link, {
     to: `/influencer/inquiries/${inquiry.counterInquiryId}`
   }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix12.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix13.Link, {
     to: `/influencer/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "influencer" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -1282,7 +1296,7 @@ __export(edit_exports, {
 });
 init_react();
 var import_react = require("react");
-var import_remix13 = __toESM(require_remix());
+var import_remix14 = __toESM(require_remix());
 var import_keys3 = __toESM(require("lodash/keys"));
 var import_filter = __toESM(require("lodash/filter"));
 var import_toPairs = __toESM(require("lodash/toPairs"));
@@ -1303,10 +1317,10 @@ var action2 = async ({ request, params }) => {
     status: (0, import_first.default)((0, import_filter.default)((0, import_keys3.default)(formData), (val) => (0, import_keys3.default)(INQUIRY.STATUS).includes(val)))
   };
   await updateInquiry(data);
-  return (0, import_remix13.redirect)(`/business/inquiries/${inquiryId}`);
+  return (0, import_remix14.redirect)(`/business/inquiries/${inquiryId}`);
 };
 var edit_default = () => {
-  const { type } = (0, import_remix13.useLoaderData)();
+  const { type } = (0, import_remix14.useLoaderData)();
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react.useState)(inquiry.inquiryLineItems);
@@ -1421,10 +1435,10 @@ var products_exports = {};
 __export(products_exports, {
   action: () => action3,
   default: () => products_default,
-  loader: () => loader8
+  loader: () => loader9
 });
 init_react();
-var import_remix14 = __toESM(require_remix());
+var import_remix15 = __toESM(require_remix());
 
 // app/partials/Icon.js
 init_react();
@@ -1477,9 +1491,9 @@ var action3 = async ({ request }) => {
   if (_action === "deleteProduct") {
     await deleteProduct({ form });
   }
-  return (0, import_remix14.redirect)(pathname);
+  return (0, import_remix15.redirect)(pathname);
 };
-var loader8 = async ({ request }) => {
+var loader9 = async ({ request }) => {
   const id = await auth_server_default.influencer.requireId({ request });
   const products = await db.product.findMany({
     where: {
@@ -1488,10 +1502,10 @@ var loader8 = async ({ request }) => {
       }
     }
   });
-  return (0, import_remix14.json)({ products });
+  return (0, import_remix15.json)({ products });
 };
 var products_default = () => {
-  const { products } = (0, import_remix14.useLoaderData)();
+  const { products } = (0, import_remix15.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "Products"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "flex flex-col rounded-xl border p-4 my-2"
@@ -1519,7 +1533,8 @@ var products_default = () => {
     type: "submit"
   }, "Add")), products.map(({ id, name, price }) => /* @__PURE__ */ React.createElement("div", {
     key: id,
-    className: "p-2 shadow rounded-lg flex justify-between"
+    className: "p-2 shadow rounded-lg flex justify-between",
+    "data-cy": "product-parent"
   }, /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col ml-2"
   }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Name:"), " ", (0, import_startCase5.default)(name)), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Price:"), " $", price)), /* @__PURE__ */ React.createElement("form", {
@@ -1550,7 +1565,7 @@ __export(register_exports, {
   default: () => register_default
 });
 init_react();
-var import_remix15 = __toESM(require_remix());
+var import_remix16 = __toESM(require_remix());
 
 // app/modules/auth/Input.js
 init_react();
@@ -1592,13 +1607,13 @@ var action4 = async ({ request }) => {
   };
   const result = await auth_server_default.influencer.register({ data });
   if (result.errors) {
-    return (0, import_remix15.json)(result);
+    return (0, import_remix16.json)(result);
   }
   return await auth_server_default.influencer.createSession({ id: result.id, redirectTo });
 };
 var register_default = () => {
-  const [searchParams] = (0, import_remix15.useSearchParams)();
-  const data = (0, import_remix15.useActionData)();
+  const [searchParams] = (0, import_remix16.useSearchParams)();
+  const data = (0, import_remix16.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Register"), /* @__PURE__ */ React.createElement("form", {
@@ -1650,16 +1665,21 @@ var settings_exports = {};
 __export(settings_exports, {
   action: () => action5,
   default: () => settings_default,
-  loader: () => loader9
+  loader: () => loader10
 });
 init_react();
-var import_remix16 = __toESM(require_remix());
+var import_remix17 = __toESM(require_remix());
 var import_keys4 = __toESM(require("lodash/keys"));
 var action5 = async ({ request }) => {
   const [form, { id: influencerId }] = await Promise.all([
     request.formData(),
     auth_server_default.influencer.get({ request, include: { address: true } })
   ]);
+  const action14 = form.get("_action");
+  if (action14 === "delete") {
+    await db.influencer.delete({ where: { id: influencerId } });
+    return (0, import_remix17.redirect)("/influencer/login");
+  }
   const street = form.get("street");
   const city = form.get("city");
   const state = form.get("state");
@@ -1682,17 +1702,21 @@ var action5 = async ({ request }) => {
       }
     }
   });
-  await auth_server_default.influencer.update({ id: influencerId, data });
-  return (0, import_remix16.redirect)(new URL(request.url).pathname);
+  const res = await auth_server_default.influencer.update({ id: influencerId, data });
+  if (res.errors) {
+    return res;
+  }
+  return (0, import_remix17.redirect)(new URL(request.url).pathname);
 };
-var loader9 = async ({ request }) => {
+var loader10 = async ({ request }) => {
   const id = await auth_server_default.influencer.requireId({ request });
   const influencer = await db.influencer.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix16.json)({ influencer });
+  return (0, import_remix17.json)({ influencer });
 };
 var settings_default = () => {
-  const { influencer } = (0, import_remix16.useLoaderData)();
-  const data = (0, import_remix16.useActionData)();
+  var _a, _b, _c, _d;
+  const { influencer } = (0, import_remix17.useLoaderData)();
+  const data = (0, import_remix17.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -1722,19 +1746,19 @@ var settings_default = () => {
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "street",
-    defaultValue: influencer.street
+    defaultValue: (_a = influencer.address) == null ? void 0 : _a.street
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "city",
-    defaultValue: influencer.city
+    defaultValue: (_b = influencer.address) == null ? void 0 : _b.city
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "state",
-    defaultValue: influencer.state
+    defaultValue: (_c = influencer.address) == null ? void 0 : _c.state
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "zip",
-    defaultValue: influencer.zip
+    defaultValue: (_d = influencer.address) == null ? void 0 : _d.zip
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "currentPassword",
@@ -1747,10 +1771,20 @@ var settings_default = () => {
     data,
     name: "confirmPassword",
     type: "password"
-  }), /* @__PURE__ */ React.createElement("button", {
+  }), /* @__PURE__ */ React.createElement("div", {
+    className: "flex gap-2"
+  }, /* @__PURE__ */ React.createElement("button", {
     type: "submit",
+    name: "_action",
+    value: "update",
     className: "button"
-  }, "Submit")));
+  }, "Update"), /* @__PURE__ */ React.createElement("button", {
+    hidden: true,
+    type: "submit",
+    name: "_action",
+    value: "delete",
+    className: "button"
+  }, "Delete"))));
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/index.jsx
@@ -1759,9 +1793,9 @@ __export(influencer_exports2, {
   default: () => Index2
 });
 init_react();
-var import_remix17 = __toESM(require_remix());
+var import_remix18 = __toESM(require_remix());
 function Index2() {
-  const { data: { influencer } } = (0, import_remix17.useMatches)().find((item) => {
+  const { data: { influencer } } = (0, import_remix18.useMatches)().find((item) => {
     var _a;
     return (_a = item.data) == null ? void 0 : _a.influencer;
   });
@@ -1775,7 +1809,7 @@ __export(login_exports, {
   default: () => Login
 });
 init_react();
-var import_remix18 = __toESM(require_remix());
+var import_remix19 = __toESM(require_remix());
 var action6 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
@@ -1783,13 +1817,13 @@ var action6 = async ({ request }) => {
   const redirectTo = form.get("redirectTo") || "/influencer";
   const result = await auth_server_default.influencer.login({ email, password });
   if (result.errors) {
-    return (0, import_remix18.json)(result);
+    return (0, import_remix19.json)(result);
   }
   return await auth_server_default.influencer.createSession({ id: result.id, module: "influencer", redirectTo });
 };
 function Login() {
-  const [searchParams] = (0, import_remix18.useSearchParams)();
-  const data = (0, import_remix18.useActionData)();
+  const [searchParams] = (0, import_remix19.useSearchParams)();
+  const data = (0, import_remix19.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Login"), /* @__PURE__ */ React.createElement("form", {
@@ -1818,29 +1852,29 @@ function Login() {
 var business_exports = {};
 __export(business_exports, {
   default: () => Index3,
-  loader: () => loader10
+  loader: () => loader11
 });
 init_react();
-var import_remix19 = __toESM(require_remix());
+var import_remix20 = __toESM(require_remix());
 var publicRoutes2 = [
   "/business/login",
   "/business/register"
 ];
-var loader10 = async ({ request }) => {
+var loader11 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   if (publicRoutes2.includes(pathname)) {
-    return (0, import_remix19.json)({ pathname });
+    return (0, import_remix20.json)({ pathname });
   }
   const business = await auth_server_default.business.get({ request });
-  return (0, import_remix19.json)({ business, pathname });
+  return (0, import_remix20.json)({ business, pathname });
 };
 function Index3() {
-  const data = (0, import_remix19.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  const data = (0, import_remix20.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/login"
-  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/register"
-  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/influencer/login"
   }, "Influencer?"))), data.business && /* @__PURE__ */ React.createElement("div", {
     className: "flex justify-end"
@@ -1856,28 +1890,28 @@ function Index3() {
     type: "submit"
   }, "Logout")), /* @__PURE__ */ React.createElement("ul", {
     className: "ml-4"
-  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business"
-  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/influencers"
-  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/partnerships"
-  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/inquiries"
-  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: "/business/settings"
-  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix19.Outlet, null));
+  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix20.Outlet, null));
 }
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/partnerships/index.jsx
 var partnerships_exports2 = {};
 __export(partnerships_exports2, {
   default: () => partnerships_default2,
-  loader: () => loader11
+  loader: () => loader12
 });
 init_react();
-var import_remix20 = __toESM(require_remix());
-var loader11 = async ({ request }) => {
+var import_remix21 = __toESM(require_remix());
+var loader12 = async ({ request }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const partnerships = await db.partnership.findMany({
     where: {
@@ -1896,13 +1930,13 @@ var loader11 = async ({ request }) => {
     },
     include: { inquiries: true }
   });
-  return (0, import_remix20.json)({ partnerships });
+  return (0, import_remix21.json)({ partnerships });
 };
 var partnerships_default2 = () => {
-  const data = (0, import_remix20.useLoaderData)();
+  const data = (0, import_remix21.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Partnerships"), /* @__PURE__ */ React.createElement("ul", null, data.partnerships.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
     to: `/business/partnerships/${id}`
   }, id, ' - status "', status, '"'))))));
 };
@@ -1911,31 +1945,43 @@ var partnerships_default2 = () => {
 var influencers_exports = {};
 __export(influencers_exports, {
   default: () => influencers_default,
-  loader: () => loader12
+  loader: () => loader13
 });
 init_react();
-var import_remix21 = __toESM(require_remix());
-var loader12 = async () => {
+var import_remix22 = __toESM(require_remix());
+var loader13 = async () => {
   const influencers = await db.influencer.findMany({ take: 5 });
-  return (0, import_remix21.json)({ influencers });
+  return (0, import_remix22.json)({ influencers });
 };
 var influencers_default = () => {
-  const data = (0, import_remix21.useLoaderData)();
+  const data = (0, import_remix22.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Browse influencers"), /* @__PURE__ */ React.createElement("ul", null, data.influencers.map(({ id, email }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix22.Link, {
     to: `/business/influencers/${id}`
   }, email))))));
+};
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/reactivate/$email.jsx
+var email_exports2 = {};
+__export(email_exports2, {
+  loader: () => loader14
+});
+init_react();
+var import_remix23 = __toESM(require_remix());
+var loader14 = async ({ params }) => {
+  await db.business.update({ where: { email: params.email }, data: { isDeleted: false } });
+  return (0, import_remix23.redirect)("/business/login");
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/partnerships/$id.jsx
 var id_exports5 = {};
 __export(id_exports5, {
   default: () => id_default5,
-  loader: () => loader13
+  loader: () => loader15
 });
 init_react();
-var import_remix22 = __toESM(require_remix());
+var import_remix24 = __toESM(require_remix());
 var import_capitalize2 = __toESM(require("lodash/capitalize"));
 var statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: "bg-yellow-200",
@@ -1943,7 +1989,7 @@ var statusBgColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader13 = async ({ request, params }) => {
+var loader15 = async ({ request, params }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const [partnership] = await db.partnership.findMany({
     where: { AND: [
@@ -1956,12 +2002,12 @@ var loader13 = async ({ request, params }) => {
     }
   });
   if (!partnership) {
-    return (0, import_remix22.redirect)("/business/partnerships");
+    return (0, import_remix24.redirect)("/business/partnerships");
   }
-  return (0, import_remix22.json)({ partnership });
+  return (0, import_remix24.json)({ partnership });
 };
 var id_default5 = () => {
-  const { partnership } = (0, import_remix22.useLoaderData)();
+  const { partnership } = (0, import_remix24.useLoaderData)();
   const statusBgColor = statusBgColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
@@ -1973,7 +2019,7 @@ var id_default5 = () => {
     href: partnership.agreement,
     target: "_blank",
     rel: "noreferrer"
-  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix22.Link, {
+  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix24.Link, {
     to: `/business/influencers/${partnership.influencer.id}`
   }, partnership.influencer.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col mt-5 md:flex-row md:mt-0"
@@ -1983,13 +2029,13 @@ var id_default5 = () => {
     className: "my-2"
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex"
-  }, /* @__PURE__ */ React.createElement(import_remix22.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix24.Link, {
     to: `/business/inquiries?partnershipId=${partnership.id}`,
     "data-css-override": true,
     className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
   }, "See all inquiries")), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col border rounded shadow"
-  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix22.Link, {
+  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix24.Link, {
     key: id,
     "data-css-override": true,
     to: `/business/inquiries/${id}`
@@ -2003,10 +2049,10 @@ var id_exports6 = {};
 __export(id_exports6, {
   action: () => action7,
   default: () => id_default6,
-  loader: () => loader14
+  loader: () => loader16
 });
 init_react();
-var import_remix23 = __toESM(require_remix());
+var import_remix25 = __toESM(require_remix());
 var action7 = async ({ request, params }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const { id: newInquiryId } = await db.inquiry.create({ data: {
@@ -2017,20 +2063,20 @@ var action7 = async ({ request, params }) => {
       }
     }
   } });
-  return (0, import_remix23.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
+  return (0, import_remix25.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
 };
-var loader14 = async ({ params }) => {
+var loader16 = async ({ params }) => {
   const influencer = await db.influencer.findUnique({
     where: { id: params.id },
     include: { products: true }
   });
   if (!influencer) {
-    return (0, import_remix23.redirect)("/business/influencers");
+    return (0, import_remix25.redirect)("/business/influencers");
   }
-  return (0, import_remix23.json)({ influencer });
+  return (0, import_remix25.json)({ influencer });
 };
 var id_default6 = () => {
-  const { influencer } = (0, import_remix23.useLoaderData)();
+  const { influencer } = (0, import_remix25.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Influencer selected: ", influencer.name), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Products they offer:"), /* @__PURE__ */ React.createElement("ul", null, influencer.products.map((product, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
   }, product.name))), influencer.products.length > 0 && /* @__PURE__ */ React.createElement("form", {
@@ -2047,20 +2093,20 @@ __export(inquiries_exports2, {
   default: () => inquiries_default2
 });
 init_react();
-var import_remix24 = __toESM(require_remix());
+var import_remix26 = __toESM(require_remix());
 var inquiries_default2 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix24.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix26.Outlet, null);
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/index.jsx
 var inquiries_exports3 = {};
 __export(inquiries_exports3, {
   default: () => inquiries_default3,
-  loader: () => loader15
+  loader: () => loader17
 });
 init_react();
-var import_remix25 = __toESM(require_remix());
-var loader15 = async ({ request }) => {
+var import_remix27 = __toESM(require_remix());
+var loader17 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   const businessId = await auth_server_default.getSessionId({ request });
   const inquiries = await db.inquiry.findMany({
@@ -2078,13 +2124,13 @@ var loader15 = async ({ request }) => {
     skip: 0,
     take: 20
   });
-  return (0, import_remix25.json)({ inquiries, pathname });
+  return (0, import_remix27.json)({ inquiries, pathname });
 };
 var inquiries_default3 = () => {
-  const { inquiries, pathname } = (0, import_remix25.useLoaderData)();
+  const { inquiries, pathname } = (0, import_remix27.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiries"), /* @__PURE__ */ React.createElement("ul", null, inquiries.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix25.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix27.Link, {
     to: pathname + "/" + id
   }, id, ' - status "', status, '"'))))));
 };
@@ -2094,10 +2140,10 @@ var id_exports7 = {};
 __export(id_exports7, {
   action: () => action8,
   default: () => id_default7,
-  loader: () => loader16
+  loader: () => loader18
 });
 init_react();
-var import_remix26 = __toESM(require_remix());
+var import_remix28 = __toESM(require_remix());
 var import_keys5 = __toESM(require("lodash/keys"));
 var action8 = async ({ request, params }) => {
   const id = params.id;
@@ -2111,11 +2157,11 @@ var action8 = async ({ request, params }) => {
   }
   if (action14 === INQUIRY.STATUS.countered) {
     const { id: newInquiryId } = await counterInquiry({ id });
-    return (0, import_remix26.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
+    return (0, import_remix28.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
   }
-  return (0, import_remix26.json)({});
+  return (0, import_remix28.json)({});
 };
-var loader16 = async ({ request, params }) => {
+var loader18 = async ({ request, params }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const [inquiry] = await db.inquiry.findMany({
     where: { AND: [
@@ -2142,12 +2188,12 @@ var loader16 = async ({ request, params }) => {
     }
   });
   if (!inquiry) {
-    return (0, import_remix26.redirect)("/business/inquiries");
+    return (0, import_remix28.redirect)("/business/inquiries");
   }
-  return (0, import_remix26.json)({ inquiry });
+  return (0, import_remix28.json)({ inquiry });
 };
 var id_default7 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix26.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix28.Outlet, null);
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id/index.jsx
@@ -2156,17 +2202,17 @@ __export(id_exports8, {
   default: () => id_default8
 });
 init_react();
-var import_remix27 = __toESM(require_remix());
+var import_remix29 = __toESM(require_remix());
 var import_startCase7 = __toESM(require("lodash/startCase"));
 var id_default8 = () => {
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix27.Link, {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix29.Link, {
     to: `/business/inquiries/${inquiry.counterInquiryId}`
   }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix27.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix29.Link, {
     to: `/business/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "business" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -2187,11 +2233,11 @@ var edit_exports2 = {};
 __export(edit_exports2, {
   action: () => action9,
   default: () => edit_default2,
-  loader: () => loader17
+  loader: () => loader19
 });
 init_react();
 var import_react2 = require("react");
-var import_remix28 = __toESM(require_remix());
+var import_remix30 = __toESM(require_remix());
 var import_keys6 = __toESM(require("lodash/keys"));
 var import_filter2 = __toESM(require("lodash/filter"));
 var import_first2 = __toESM(require("lodash/first"));
@@ -2212,18 +2258,18 @@ var action9 = async ({ request, params }) => {
     status: (0, import_first2.default)((0, import_filter2.default)((0, import_keys6.default)(formData), (val) => (0, import_keys6.default)(INQUIRY.STATUS).includes(val)))
   };
   await updateInquiry(data);
-  return (0, import_remix28.redirect)(`/business/inquiries/${inquiryId}`);
+  return (0, import_remix30.redirect)(`/business/inquiries/${inquiryId}`);
 };
-var loader17 = async ({ request, params }) => {
+var loader19 = async ({ request, params }) => {
   const { searchParams } = new URL(request.url);
   const inquiry = await db.inquiry.findUnique({ where: { id: params.id } });
   if (inquiry.status !== INQUIRY.STATUS.drafted) {
-    return (0, import_remix28.redirect)(`/business/inquiries/${params.id}`);
+    return (0, import_remix30.redirect)(`/business/inquiries/${params.id}`);
   }
-  return (0, import_remix28.json)({ type: searchParams.get("type") });
+  return (0, import_remix30.json)({ type: searchParams.get("type") });
 };
 var edit_default2 = () => {
-  const { type } = (0, import_remix28.useLoaderData)();
+  const { type } = (0, import_remix30.useLoaderData)();
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react2.useState)(inquiry.inquiryLineItems);
@@ -2340,7 +2386,7 @@ __export(register_exports2, {
   default: () => register_default2
 });
 init_react();
-var import_remix29 = __toESM(require_remix());
+var import_remix31 = __toESM(require_remix());
 var action10 = async ({ request }) => {
   const form = await request.formData();
   const redirectTo = form.get("redirectTo") || "/business";
@@ -2361,13 +2407,13 @@ var action10 = async ({ request }) => {
   };
   const result = await auth_server_default.business.register({ data });
   if (result.errors) {
-    return (0, import_remix29.json)(result);
+    return (0, import_remix31.json)(result);
   }
   return await auth_server_default.business.createSession({ id: result.id, redirectTo });
 };
 var register_default2 = () => {
-  const [searchParams] = (0, import_remix29.useSearchParams)();
-  const data = (0, import_remix29.useActionData)();
+  const [searchParams] = (0, import_remix31.useSearchParams)();
+  const data = (0, import_remix31.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Register"), /* @__PURE__ */ React.createElement("form", {
@@ -2419,16 +2465,21 @@ var settings_exports2 = {};
 __export(settings_exports2, {
   action: () => action11,
   default: () => settings_default2,
-  loader: () => loader18
+  loader: () => loader20
 });
 init_react();
-var import_remix30 = __toESM(require_remix());
+var import_remix32 = __toESM(require_remix());
 var import_keys7 = __toESM(require("lodash/keys"));
 var action11 = async ({ request }) => {
   const [form, { id: businessId }] = await Promise.all([
     request.formData(),
     auth_server_default.business.get({ request, include: { address: true } })
   ]);
+  const action14 = form.get("_action");
+  if (action14 === "delete") {
+    await db.business.delete({ where: { id: businessId } });
+    return (0, import_remix32.redirect)("/business/login");
+  }
   const street = form.get("street");
   const city = form.get("city");
   const state = form.get("state");
@@ -2451,17 +2502,21 @@ var action11 = async ({ request }) => {
       }
     }
   });
-  await auth_server_default.business.update({ id: businessId, data });
-  return (0, import_remix30.redirect)(new URL(request.url).pathname);
+  const res = await auth_server_default.business.update({ id: businessId, data });
+  if (res.errors) {
+    return res;
+  }
+  return (0, import_remix32.redirect)(new URL(request.url).pathname);
 };
-var loader18 = async ({ request }) => {
+var loader20 = async ({ request }) => {
   const id = await auth_server_default.business.requireId({ request });
   const business = await db.business.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix30.json)({ business });
+  return (0, import_remix32.json)({ business });
 };
 var settings_default2 = () => {
-  const { business } = (0, import_remix30.useLoaderData)();
-  const data = (0, import_remix30.useActionData)();
+  var _a, _b, _c, _d;
+  const { business } = (0, import_remix32.useLoaderData)();
+  const data = (0, import_remix32.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -2491,19 +2546,19 @@ var settings_default2 = () => {
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "street",
-    defaultValue: business.street
+    defaultValue: (_a = business.address) == null ? void 0 : _a.street
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "city",
-    defaultValue: business.city
+    defaultValue: (_b = business.address) == null ? void 0 : _b.city
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "state",
-    defaultValue: business.state
+    defaultValue: (_c = business.address) == null ? void 0 : _c.state
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "zip",
-    defaultValue: business.zip
+    defaultValue: (_d = business.address) == null ? void 0 : _d.zip
   }), /* @__PURE__ */ React.createElement(Input_default, {
     data,
     name: "currentPassword",
@@ -2516,27 +2571,37 @@ var settings_default2 = () => {
     data,
     name: "confirmPassword",
     type: "password"
-  }), /* @__PURE__ */ React.createElement("button", {
+  }), /* @__PURE__ */ React.createElement("div", {
+    className: "flex gap-2"
+  }, /* @__PURE__ */ React.createElement("button", {
     type: "submit",
+    name: "_action",
+    value: "update",
     className: "button"
-  }, "Submit")));
+  }, "Update"), /* @__PURE__ */ React.createElement("button", {
+    hidden: true,
+    type: "submit",
+    name: "_action",
+    value: "delete",
+    className: "button"
+  }, "Delete"))));
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/index.jsx
 var business_exports2 = {};
 __export(business_exports2, {
   default: () => Index4,
-  loader: () => loader19
+  loader: () => loader21
 });
 init_react();
-var import_remix31 = __toESM(require_remix());
-var loader19 = async ({ request }) => {
+var import_remix33 = __toESM(require_remix());
+var loader21 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   const business = await auth_server_default.business.get({ request });
-  return (0, import_remix31.json)({ business, pathname });
+  return (0, import_remix33.json)({ business, pathname });
 };
 function Index4() {
-  const data = (0, import_remix31.useLoaderData)();
+  const data = (0, import_remix33.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, "Dashboard for ", data.business.name);
 }
 
@@ -2547,7 +2612,7 @@ __export(login_exports2, {
   default: () => Login2
 });
 init_react();
-var import_remix32 = __toESM(require_remix());
+var import_remix34 = __toESM(require_remix());
 var action12 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
@@ -2555,13 +2620,13 @@ var action12 = async ({ request }) => {
   const redirectTo = form.get("redirectTo") || "/business";
   const result = await auth_server_default.business.login({ email, password });
   if (result.errors) {
-    return (0, import_remix32.json)(result);
+    return (0, import_remix34.json)(result);
   }
   return await auth_server_default.business.createSession({ id: result.id, redirectTo });
 };
 function Login2() {
-  const [searchParams] = (0, import_remix32.useSearchParams)();
-  const data = (0, import_remix32.useActionData)();
+  const [searchParams] = (0, import_remix34.useSearchParams)();
+  const data = (0, import_remix34.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Login"), /* @__PURE__ */ React.createElement("form", {
@@ -2594,22 +2659,22 @@ __export(logout_exports, {
 init_react();
 var action13 = async ({ request }) => {
   const form = await request.formData();
-  const module2 = form.get("module");
+  const module2 = form.get("module") || "business";
   return auth_server_default[module2].logout({ request });
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/index.jsx
 var routes_exports = {};
 __export(routes_exports, {
-  loader: () => loader20
+  loader: () => loader22
 });
 init_react();
-var import_remix33 = __toESM(require_remix());
-var loader20 = () => (0, import_remix33.redirect)("/business");
+var import_remix35 = __toESM(require_remix());
+var loader22 = () => (0, import_remix35.redirect)("/business");
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
 init_react();
-var assets_manifest_default = { "version": "a782a47e", "entry": { "module": "/build/entry.client-5PDLM7XZ.js", "imports": ["/build/_shared/chunk-QO72BVG2.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-OOBDMLYI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-5P6DYX76.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-GTFZSHCF.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-5R3GKZYG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-QJTVG6WG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-LFKZGLGU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-MZ6ZX264.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-YKA74BJS.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-YDCTJZSH.js", "imports": ["/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-WHFIRAY6.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-4RK3EB5I.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-XDLSAMKE.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-OUTERKO6.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-6AGTJN5T.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-P4LRKMD4.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-J7XRGJHS.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-MJ7HJ26M.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-VAXEQLWT.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-ITYCECKU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-EKRKJL5U.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-Q2TO4ROO.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-4YJCDMZA.js", "imports": ["/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-KFBNCF34.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-CVFMRT44.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-AMXHU7R4.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-MTWBBMMV.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-PUODG4TD.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-JFZQ5L7F.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-3HKIBOKG.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-A782A47E.js" };
+var assets_manifest_default = { "version": "06c96052", "entry": { "module": "/build/entry.client-HOXSNM7B.js", "imports": ["/build/_shared/chunk-747ETDNF.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-JM2UDOB3.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-DISVV3AA.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-5LITQIJ7.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-L4CDAXFH.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-PXWLRYI5.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-ALM66LAI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-6THGNAB2.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-YML2OZID.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-NIXHHWMA.js", "imports": ["/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-HYM2Y4KX.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-NZPMWZNT.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-YIIH4IOV.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-3Z6TOEKQ.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/reactivate/$email": { "id": "routes/business/reactivate/$email", "parentId": "routes/business", "path": "reactivate/:email", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/reactivate/$email-IOVEN5PR.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-JSOSJH4D.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-GILUTOXM.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-EZV3YM7O.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-6IFBW5BZ.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-KKV35NW5.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-BQH26XQR.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-ZHLR753K.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-AB6ECQ2I.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-O6J7LTPD.js", "imports": ["/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-JW2HZ7JM.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-K5JWSCJD.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-T2FDNYC5.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-UYR2BIYA.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-UWLVSU27.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/reactivate/$email": { "id": "routes/influencer/reactivate/$email", "parentId": "routes/influencer", "path": "reactivate/:email", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/reactivate/$email-BUX7VYD5.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-7IZD3JGV.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-XBHUYFJG.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-06C96052.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var entry = { module: entry_server_exports };
@@ -2637,6 +2702,14 @@ var routes = {
     index: true,
     caseSensitive: void 0,
     module: partnerships_exports
+  },
+  "routes/influencer/reactivate/$email": {
+    id: "routes/influencer/reactivate/$email",
+    parentId: "routes/influencer",
+    path: "reactivate/:email",
+    index: void 0,
+    caseSensitive: void 0,
+    module: email_exports
   },
   "routes/influencer/businesses/index": {
     id: "routes/influencer/businesses/index",
@@ -2758,6 +2831,14 @@ var routes = {
     caseSensitive: void 0,
     module: influencers_exports
   },
+  "routes/business/reactivate/$email": {
+    id: "routes/business/reactivate/$email",
+    parentId: "routes/business",
+    path: "reactivate/:email",
+    index: void 0,
+    caseSensitive: void 0,
+    module: email_exports2
+  },
   "routes/business/partnerships/$id": {
     id: "routes/business/partnerships/$id",
     parentId: "routes/business",
@@ -2871,7 +2952,7 @@ module.exports = __toCommonJS(stdin_exports);
   routes
 });
 /**
- * @remix-run/node v1.3.4
+ * @remix-run/node v1.4.0
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -2881,7 +2962,7 @@ module.exports = __toCommonJS(stdin_exports);
  * @license MIT
  */
 /**
- * @remix-run/react v1.3.4
+ * @remix-run/react v1.4.0
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -2891,7 +2972,7 @@ module.exports = __toCommonJS(stdin_exports);
  * @license MIT
  */
 /**
- * @remix-run/server-runtime v1.3.4
+ * @remix-run/server-runtime v1.4.0
  *
  * Copyright (c) Remix Software Inc.
  *

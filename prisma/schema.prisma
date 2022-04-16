@@ -18,14 +18,15 @@ model Address {
 }
 
 model Business {
-  id            String        @unique @default(uuid())
-  email         String        @unique
+  id            String          @unique @default(uuid())
+  email         String          @unique
   passhash      String
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime        @default(now())
   name          String?
   phone         String?
   instagram     String?
-  address       Address?       @relation(fields: [addressId], references: [id])
+  isDeleted     Boolean         @default(false)
+  address       Address?        @relation(fields: [addressId], references: [id])
   addressId     String?
   partnerships  Partnership[]
 }
@@ -39,6 +40,7 @@ model Influencer {
   phone         String?
   instagram     String?
   paidOnly      Boolean       @default(false)
+  isDeleted     Boolean       @default(false)
   products      Product[]
   partnerships  Partnership[]
   address       Address?      @relation(fields: [addressId], references: [id])
