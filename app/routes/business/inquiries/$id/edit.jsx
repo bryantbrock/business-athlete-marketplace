@@ -1,112 +1,50 @@
 import {useState} from 'react'
 import {redirect, json, useLoaderData} from 'remix'
-import partition from 'lodash/partition'
 import keys from 'lodash/keys'
 import filter from 'lodash/filter'
-import omit from 'lodash/omit'
-import toPairs from 'lodash/toPairs'
+import first from 'lodash/first'
 import startCase from 'lodash/startCase'
+import toPairs from 'lodash/toPairs'
 import {db} from '~/utils/db.server'
-import {INQUIRY, PARTNERSHIP} from '~/utils/constants'
+import {INQUIRY} from '~/utils/constants'
+import {useParentLoaderData} from '~/utils/hooks'
+import {updateInquiry} from '~/modules/inquiry/actions.server'
 
 export const action = async ({request, params}) => {
+  const inquiryId = params.id;
   const form = await request.formData()
-  const [status] = filter(keys(Object.fromEntries(form)), val => keys(INQUIRY.STATUS).includes(val))
+  const formData = Object.fromEntries(form)
 
-  const influencerId = form.get('influencerId')
-  const partnershipId = form.get('partnershipId')
-  const partnershipStatus = form.get('partnershipStatus')
-
-  const {products: influencerProducts} = await db.influencer.findUnique({
-    where: {id: influencerId},
-    include: {products: true}
-  })
-
-  const [productEntries, otherEntries] = partition(toPairs(Object.fromEntries(form)), ([k]) => k.includes('product'))
-  const lineItemEntries = productEntries.reduce((acc, [k, v]) => {
-    const [idx, field] = k.split('-product-')
-
-    if (!acc[idx]) {
-      acc[idx] = {}
-    }
-
-    acc[idx][field] = v
-
-    return acc
-  }, [])
-
-  const data = filter(otherEntries, ([k,v]) => Boolean(v)).reduce((acc, [k, v]) => ({...acc, [k]: v}), {})
-  const lineItems = lineItemEntries.map(
-    obj => {
-      const [{id}] = influencerProducts.filter(prod => prod.name === obj.name)
-
-      return {
-        ...omit(obj, ['name', 'id']),
-        product: {connect: {id}},
-        quantity: Number(obj.quantity)
-      }
-    }
-  )
-
-  // Delete previous line items
-  await db.inquiryLineItem.deleteMany({where: {inquiry: {is: {id: params.id}}}})
-
-  // Update inquiry and add all new line items
-  await db.inquiry.update({
-    where: {id: params.id},
-    data: {
-      ...omit(data, ['influencerId', 'partnershipId', 'partnershipStatus']),
-      status,
-      ...(data.startDate && {startDate: new Date(data.startDate).toISOString()}),
-      ...(data.endDate && {endDate: new Date(data.endDate).toISOString()}),
-      inquiryLineItems: {
-        create: lineItems
-      },
-    }
-  })
-
-  // Update the partnership status
-  if (partnershipStatus === PARTNERSHIP.STATUS.drafted && status === INQUIRY.STATUS.pending) {
-    await db.partnership.update({
-      where: {id: partnershipId},
-      data: {status: PARTNERSHIP.STATUS.pending}
-    })
+  const data = {
+    inquiryId,
+    notes: form.get('notes'),
+    endDate: form.get('endDate'),
+    startDate: form.get('startDate'),
+    lineItemData: filter(toPairs(formData), ([k]) => k.includes('product')),
+    influencerId: form.get('influencerId'),
+    partnershipId: form.get('partnershipId'),
+    status: first(filter(keys(formData), val => keys(INQUIRY.STATUS).includes(val))),
   }
 
-  return redirect(`/business/inquiries/${params.id}`)
+  await updateInquiry(data)
+
+  return redirect(`/business/inquiries/${inquiryId}`)
 }
 
 export const loader = async ({request, params}) => {
   const {searchParams} = new URL(request.url)
-  const inquiry = await db.inquiry.findUnique({
-    where: {id: params.id},
-    include: {
-      inquiryLineItems: {
-        include: {
-          product: true
-        }
-      },
-      partnership: {
-        include: {
-          influencer: {
-            include: {
-              products: true
-            }
-          }
-        }
-      }
-    }
-  })
+  const inquiry = await db.inquiry.findUnique({where: {id: params.id}})
 
   if (inquiry.status !== INQUIRY.STATUS.drafted) {
     return redirect(`/business/inquiries/${params.id}`)
   }
 
-  return json({inquiry, type: searchParams.get('type')})
+  return json({type: searchParams.get('type')})
 }
 
 export default () => {
-  const {inquiry, type} = useLoaderData()
+  const {type} = useLoaderData()
+  const {inquiry} = useParentLoaderData({key: 'inquiry'})
   const {influencer} = inquiry.partnership
   const [lineItems, setLineItems] = useState(inquiry.inquiryLineItems)
 
@@ -128,7 +66,6 @@ export default () => {
       <form method='post'>
         <input hidden name='influencerId' defaultValue={influencer.id} />
         <input hidden name='partnershipId' defaultValue={inquiry.partnership.id} />
-        <input hidden name='partnershipStatus' defaultValue={inquiry.partnership.status} />
         <div className='flex flex-col m-2 md:w-1/2'>
           <label html-for='startDate' className='mb-1'>Start Date</label>
           <input name='startDate' type='date' defaultValue={startDate} />

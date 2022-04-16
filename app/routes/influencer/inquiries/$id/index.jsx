@@ -1,28 +1,10 @@
-import {json, Link, useLoaderData, redirect} from 'remix'
+import {Link} from 'remix'
 import startCase from 'lodash/startCase'
-import {db} from '~/utils/db.server'
 import {INQUIRY} from '~/utils/constants'
-
-export const loader = async ({params}) => {
-  const id = params.id
-  const inquiry = await db.inquiry.findUnique({
-    where: {id},
-    include: {
-      inquiryLineItems: {
-        include: {product: true}
-      }
-    }
-  })
-
-  if (!inquiry) {
-    return redirect('/influencer/inquiries')
-  }
-
-  return json({inquiry})
-}
+import {useParentLoaderData} from '~/utils/hooks'
 
 export default () => {
-  const {inquiry} = useLoaderData()
+  const {inquiry} = useParentLoaderData({key: 'inquiry'})
 
   return (
     <div>
@@ -37,6 +19,9 @@ export default () => {
           <li><strong>End Date:</strong> {(new Date(inquiry.endDate)).toLocaleDateString()}</li>
           <li><strong>Notes:</strong> {inquiry.notes}</li>
           <li><strong>Countered?</strong> {inquiry.counterInquiryId ? 'Yes' : 'No'}</li>
+          {inquiry.counterInquiryId && (
+            <li><Link to={`/influencer/inquiries/${inquiry.counterInquiryId}`}>Countered inquiry {'->'}</Link></li>
+          )}
         </ul>
         <ul>
           {inquiry.inquiryLineItems.map(({product, quantity, interval}, idx) => (

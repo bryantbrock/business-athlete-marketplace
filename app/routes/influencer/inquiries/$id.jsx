@@ -1,6 +1,8 @@
 import {json, Outlet, redirect} from 'remix'
 import keys from 'lodash/keys'
 import {INQUIRY} from '~/utils/constants'
+import {db} from '~/utils/db.server'
+import Auth from '~/modules/auth/auth.server'
 import {acceptInquiry, rejectInquiry, counterInquiry} from '~/modules/inquiry/actions.server'
 
 export const action = async ({request, params}) => {
@@ -23,6 +25,40 @@ export const action = async ({request, params}) => {
   }
 
   return json({})
+}
+
+export const loader = async ({request, params}) => {
+  const influencerId = await Auth.getSessionId({request})
+  const [inquiry] = await db.inquiry.findMany({
+    where: {AND: [
+      {id: params.id},
+      {
+        partnership: {
+          influencer: {
+            is: {id: influencerId}
+          }
+        }
+      }
+    ]},
+    include: {
+      inquiryLineItems: {
+        include: {product: true}
+      },
+      partnership: {
+        include: {
+          influencer: {
+            include: {products: true}
+          }
+        }
+      }
+    }
+  })
+
+  if (!inquiry) {
+    return redirect('/influencer/inquiries')
+  }
+
+  return json({inquiry})
 }
 
 export default () => {

@@ -1,7 +1,9 @@
 import {acceptInquiry, rejectInquiry, counterInquiry} from '~/modules/inquiry/actions.server'
 import {redirect, json, Outlet} from 'remix'
 import {INQUIRY} from '~/utils/constants'
+import {db} from '~/utils/db.server'
 import keys from 'lodash/keys'
+import Auth from '~/modules/auth/auth.server'
 
 export const action = async ({request, params}) => {
   const id = params.id
@@ -23,6 +25,40 @@ export const action = async ({request, params}) => {
   }
 
   return json({})
+}
+
+export const loader = async ({request, params}) => {
+  const businessId = await Auth.getSessionId({request})
+  const [inquiry] = await db.inquiry.findMany({
+    where: {AND: [
+      {id: params.id},
+      {
+        partnership: {
+          business: {
+            is: {id: businessId}
+          }
+        }
+      }
+    ]},
+    include: {
+      inquiryLineItems: {
+        include: {product: true}
+      },
+      partnership: {
+        include: {
+          influencer: {
+            include: {products: true}
+          }
+        }
+      }
+    }
+  })
+
+  if (!inquiry) {
+    return redirect('/business/inquiries')
+  }
+
+  return json({inquiry})
 }
 
 export default () => {

@@ -834,9 +834,13 @@ var statusColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader4 = async ({ params }) => {
-  const partnership = await db.partnership.findUnique({
-    where: { id: params.id },
+var loader4 = async ({ request, params }) => {
+  const influencerId = await auth_server_default.getSessionId({ request });
+  const [partnership] = await db.partnership.findMany({
+    where: { AND: [
+      { id: params.id },
+      { influencer: { is: { id: influencerId } } }
+    ] },
     include: {
       inquiries: {
         where: { NOT: { status: INQUIRY.STATUS.drafter } },
@@ -957,7 +961,8 @@ var id_default2 = () => {
 var id_exports3 = {};
 __export(id_exports3, {
   action: () => action,
-  default: () => id_default3
+  default: () => id_default3,
+  loader: () => loader7
 });
 init_react();
 var import_remix10 = __toESM(require_remix());
@@ -1103,7 +1108,7 @@ var counterInquiry = async ({ id }) => {
     where: { id },
     include: { inquiryLineItems: true }
   });
-  const newInquiry = await db.inquiry.create({ data: __spreadProps(__spreadValues({}, (0, import_pick.default)(inquiry, ["startDate", "endDate", "notes", "status"])), {
+  const newInquiry = await db.inquiry.create({ data: __spreadProps(__spreadValues({}, (0, import_pick.default)(inquiry, ["startDate", "endDate", "notes"])), {
     to: inquiry.from,
     from: inquiry.to,
     partnership: { connect: { id: inquiry.partnershipId } },
@@ -1113,12 +1118,66 @@ var counterInquiry = async ({ id }) => {
   }) });
   await db.inquiry.update({
     where: { id },
-    data: {
-      status: INQUIRY.STATUS.countered,
-      counterInquiry: { connect: { id: newInquiry.id } }
-    }
+    data: { counterInquiry: { connect: { id: newInquiry.id } } }
   });
   return newInquiry;
+};
+var toArrOfObjs = (acc, [k, v]) => {
+  const [idx, field] = k.split("-product-");
+  if (!acc[idx]) {
+    acc[idx] = {};
+  }
+  acc[idx][field] = v;
+  return acc;
+};
+var toProduct = (products) => (obj) => {
+  const { id } = products.find((prod) => prod.name === obj.name);
+  return {
+    interval: obj.interval,
+    product: { connect: { id } },
+    quantity: Number(obj.quantity)
+  };
+};
+var updateInquiry = async ({
+  partnershipId,
+  influencerId,
+  lineItemData,
+  inquiryId,
+  startDate,
+  endDate,
+  status,
+  notes
+}) => {
+  const { products } = await db.influencer.findUnique({
+    where: { id: influencerId },
+    include: { products: true }
+  });
+  const lineItems = lineItemData.reduce(toArrOfObjs, []).map(toProduct(products));
+  await db.inquiryLineItem.deleteMany({ where: { inquiry: { is: { id: inquiryId } } } });
+  await db.inquiry.update({
+    where: { id: inquiryId },
+    data: __spreadProps(__spreadValues(__spreadValues({
+      notes,
+      status
+    }, startDate && { startDate: new Date(startDate).toISOString() }), endDate && { endDate: new Date(endDate).toISOString() }), {
+      inquiryLineItems: {
+        create: lineItems
+      }
+    })
+  });
+  if (status === INQUIRY.STATUS.pending) {
+    const [counteredInquiry] = await db.inquiry.findMany({ where: { counterInquiryId: inquiryId } });
+    await Promise.all([
+      counteredInquiry && db.inquiry.update({
+        where: { id: counteredInquiry.id },
+        data: { status: INQUIRY.STATUS.countered }
+      }),
+      db.partnership.update({
+        where: { id: partnershipId },
+        data: { status: PARTNERSHIP.STATUS.pending }
+      })
+    ]);
+  }
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id.jsx
@@ -1138,6 +1197,37 @@ var action = async ({ request, params }) => {
   }
   return (0, import_remix10.json)({});
 };
+var loader7 = async ({ request, params }) => {
+  const influencerId = await auth_server_default.getSessionId({ request });
+  const [inquiry] = await db.inquiry.findMany({
+    where: { AND: [
+      { id: params.id },
+      {
+        partnership: {
+          influencer: {
+            is: { id: influencerId }
+          }
+        }
+      }
+    ] },
+    include: {
+      inquiryLineItems: {
+        include: { product: true }
+      },
+      partnership: {
+        include: {
+          influencer: {
+            include: { products: true }
+          }
+        }
+      }
+    }
+  });
+  if (!inquiry) {
+    return (0, import_remix10.redirect)("/influencer/inquiries");
+  }
+  return (0, import_remix10.json)({ inquiry });
+};
 var id_default3 = () => {
   return /* @__PURE__ */ React.createElement(import_remix10.Outlet, null);
 };
@@ -1145,34 +1235,30 @@ var id_default3 = () => {
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/index.jsx
 var id_exports4 = {};
 __export(id_exports4, {
-  default: () => id_default4,
-  loader: () => loader7
+  default: () => id_default4
 });
 init_react();
-var import_remix11 = __toESM(require_remix());
+var import_remix12 = __toESM(require_remix());
 var import_startCase3 = __toESM(require("lodash/startCase"));
-var loader7 = async ({ params }) => {
-  const id = params.id;
-  const inquiry = await db.inquiry.findUnique({
-    where: { id },
-    include: {
-      inquiryLineItems: {
-        include: { product: true }
-      }
-    }
-  });
-  if (!inquiry) {
-    return (0, import_remix11.redirect)("/influencer/inquiries");
-  }
-  return (0, import_remix11.json)({ inquiry });
+
+// app/utils/hooks/useParentLoaderData.js
+init_react();
+var import_remix11 = __toESM(require_remix());
+var useParentLoaderData = ({ key }) => {
+  const match = (0, import_remix11.useMatches)().find(({ data }) => data && data[key]);
+  return match ? { [key]: match.data[key] } : {};
 };
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/index.jsx
 var id_default4 = () => {
-  const { inquiry } = (0, import_remix11.useLoaderData)();
+  const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No")), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No"), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix12.Link, {
+    to: `/influencer/inquiries/${inquiry.counterInquiryId}`
+  }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix11.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix12.Link, {
     to: `/influencer/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "influencer" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -1192,84 +1278,36 @@ var id_default4 = () => {
 var edit_exports = {};
 __export(edit_exports, {
   action: () => action2,
-  default: () => edit_default,
-  loader: () => loader8
+  default: () => edit_default
 });
 init_react();
 var import_react = require("react");
-var import_remix12 = __toESM(require_remix());
-var import_partition = __toESM(require("lodash/partition"));
+var import_remix13 = __toESM(require_remix());
 var import_keys3 = __toESM(require("lodash/keys"));
 var import_filter = __toESM(require("lodash/filter"));
-var import_omit2 = __toESM(require("lodash/omit"));
 var import_toPairs = __toESM(require("lodash/toPairs"));
 var import_startCase4 = __toESM(require("lodash/startCase"));
+var import_first = __toESM(require("lodash/first"));
 var action2 = async ({ request, params }) => {
+  const inquiryId = params.id;
   const form = await request.formData();
-  const [status] = (0, import_filter.default)((0, import_keys3.default)(Object.fromEntries(form)), (val) => (0, import_keys3.default)(INQUIRY.STATUS).includes(val));
-  const influencerId = form.get("influencerId");
-  const { products: influencerProducts } = await db.influencer.findUnique({
-    where: { id: influencerId },
-    include: { products: true }
-  });
-  const [productEntries, otherEntries] = (0, import_partition.default)((0, import_toPairs.default)(Object.fromEntries(form)), ([k]) => k.includes("product"));
-  const lineItemEntries = productEntries.reduce((acc, [k, v]) => {
-    const [idx, field] = k.split("-product-");
-    if (!acc[idx]) {
-      acc[idx] = {};
-    }
-    acc[idx][field] = v;
-    return acc;
-  }, []);
-  const data = (0, import_filter.default)(otherEntries, ([k, v]) => Boolean(v)).reduce((acc, [k, v]) => __spreadProps(__spreadValues({}, acc), { [k]: v }), {});
-  const lineItems = lineItemEntries.map((obj) => {
-    const [{ id }] = influencerProducts.filter((prod) => prod.name === obj.name);
-    return __spreadProps(__spreadValues({}, (0, import_omit2.default)(obj, ["name", "id"])), {
-      product: { connect: { id } },
-      quantity: Number(obj.quantity)
-    });
-  });
-  await db.inquiryLineItem.deleteMany({ where: { inquiry: { is: { id: params.id } } } });
-  await db.inquiry.update({
-    where: { id: params.id },
-    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit2.default)(data, ["influencerId"])), {
-      status
-    }), data.startDate && { startDate: new Date(data.startDate).toISOString() }), data.endDate && { endDate: new Date(data.endDate).toISOString() }), {
-      inquiryLineItems: {
-        create: lineItems
-      }
-    })
-  });
-  return (0, import_remix12.redirect)(`/influencer/inquiries/${params.id}`);
-};
-var loader8 = async ({ request, params }) => {
-  const { searchParams } = new URL(request.url);
-  const inquiry = await db.inquiry.findUnique({
-    where: { id: params.id },
-    include: {
-      inquiryLineItems: {
-        include: {
-          product: true
-        }
-      },
-      partnership: {
-        include: {
-          influencer: {
-            include: {
-              products: true
-            }
-          }
-        }
-      }
-    }
-  });
-  if (inquiry.status !== INQUIRY.STATUS.drafted) {
-    return (0, import_remix12.redirect)(`/influencer/inquiries/${params.id}`);
-  }
-  return (0, import_remix12.json)({ inquiry, type: searchParams.get("type") });
+  const formData = Object.fromEntries(form);
+  const data = {
+    inquiryId,
+    notes: form.get("notes"),
+    endDate: form.get("endDate"),
+    startDate: form.get("startDate"),
+    lineItemData: (0, import_filter.default)((0, import_toPairs.default)(formData), ([k]) => k.includes("product")),
+    influencerId: form.get("influencerId"),
+    partnershipId: form.get("partnershipId"),
+    status: (0, import_first.default)((0, import_filter.default)((0, import_keys3.default)(formData), (val) => (0, import_keys3.default)(INQUIRY.STATUS).includes(val)))
+  };
+  await updateInquiry(data);
+  return (0, import_remix13.redirect)(`/business/inquiries/${inquiryId}`);
 };
 var edit_default = () => {
-  const { inquiry, type } = (0, import_remix12.useLoaderData)();
+  const { type } = (0, import_remix13.useLoaderData)();
+  const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react.useState)(inquiry.inquiryLineItems);
   const newItem = influencer.products.length > 0 && {
@@ -1288,6 +1326,10 @@ var edit_default = () => {
     hidden: true,
     name: "influencerId",
     defaultValue: influencer.id
+  }), /* @__PURE__ */ React.createElement("input", {
+    hidden: true,
+    name: "partnershipId",
+    defaultValue: inquiry.partnership.id
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col m-2 md:w-1/2"
   }, /* @__PURE__ */ React.createElement("label", {
@@ -1379,10 +1421,10 @@ var products_exports = {};
 __export(products_exports, {
   action: () => action3,
   default: () => products_default,
-  loader: () => loader9
+  loader: () => loader8
 });
 init_react();
-var import_remix13 = __toESM(require_remix());
+var import_remix14 = __toESM(require_remix());
 
 // app/partials/Icon.js
 init_react();
@@ -1435,9 +1477,9 @@ var action3 = async ({ request }) => {
   if (_action === "deleteProduct") {
     await deleteProduct({ form });
   }
-  return (0, import_remix13.redirect)(pathname);
+  return (0, import_remix14.redirect)(pathname);
 };
-var loader9 = async ({ request }) => {
+var loader8 = async ({ request }) => {
   const id = await auth_server_default.influencer.requireId({ request });
   const products = await db.product.findMany({
     where: {
@@ -1446,10 +1488,10 @@ var loader9 = async ({ request }) => {
       }
     }
   });
-  return (0, import_remix13.json)({ products });
+  return (0, import_remix14.json)({ products });
 };
 var products_default = () => {
-  const { products } = (0, import_remix13.useLoaderData)();
+  const { products } = (0, import_remix14.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "Products"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "flex flex-col rounded-xl border p-4 my-2"
@@ -1508,7 +1550,7 @@ __export(register_exports, {
   default: () => register_default
 });
 init_react();
-var import_remix14 = __toESM(require_remix());
+var import_remix15 = __toESM(require_remix());
 
 // app/modules/auth/Input.js
 init_react();
@@ -1550,13 +1592,13 @@ var action4 = async ({ request }) => {
   };
   const result = await auth_server_default.influencer.register({ data });
   if (result.errors) {
-    return (0, import_remix14.json)(result);
+    return (0, import_remix15.json)(result);
   }
   return await auth_server_default.influencer.createSession({ id: result.id, redirectTo });
 };
 var register_default = () => {
-  const [searchParams] = (0, import_remix14.useSearchParams)();
-  const data = (0, import_remix14.useActionData)();
+  const [searchParams] = (0, import_remix15.useSearchParams)();
+  const data = (0, import_remix15.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Register"), /* @__PURE__ */ React.createElement("form", {
@@ -1608,10 +1650,10 @@ var settings_exports = {};
 __export(settings_exports, {
   action: () => action5,
   default: () => settings_default,
-  loader: () => loader10
+  loader: () => loader9
 });
 init_react();
-var import_remix15 = __toESM(require_remix());
+var import_remix16 = __toESM(require_remix());
 var import_keys4 = __toESM(require("lodash/keys"));
 var action5 = async ({ request }) => {
   const [form, { id: influencerId }] = await Promise.all([
@@ -1641,16 +1683,16 @@ var action5 = async ({ request }) => {
     }
   });
   await auth_server_default.influencer.update({ id: influencerId, data });
-  return (0, import_remix15.redirect)(new URL(request.url).pathname);
+  return (0, import_remix16.redirect)(new URL(request.url).pathname);
 };
-var loader10 = async ({ request }) => {
+var loader9 = async ({ request }) => {
   const id = await auth_server_default.influencer.requireId({ request });
   const influencer = await db.influencer.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix15.json)({ influencer });
+  return (0, import_remix16.json)({ influencer });
 };
 var settings_default = () => {
-  const { influencer } = (0, import_remix15.useLoaderData)();
-  const data = (0, import_remix15.useActionData)();
+  const { influencer } = (0, import_remix16.useLoaderData)();
+  const data = (0, import_remix16.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -1717,9 +1759,9 @@ __export(influencer_exports2, {
   default: () => Index2
 });
 init_react();
-var import_remix16 = __toESM(require_remix());
+var import_remix17 = __toESM(require_remix());
 function Index2() {
-  const { data: { influencer } } = (0, import_remix16.useMatches)().find((item) => {
+  const { data: { influencer } } = (0, import_remix17.useMatches)().find((item) => {
     var _a;
     return (_a = item.data) == null ? void 0 : _a.influencer;
   });
@@ -1733,7 +1775,7 @@ __export(login_exports, {
   default: () => Login
 });
 init_react();
-var import_remix17 = __toESM(require_remix());
+var import_remix18 = __toESM(require_remix());
 var action6 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
@@ -1741,13 +1783,13 @@ var action6 = async ({ request }) => {
   const redirectTo = form.get("redirectTo") || "/influencer";
   const result = await auth_server_default.influencer.login({ email, password });
   if (result.errors) {
-    return (0, import_remix17.json)(result);
+    return (0, import_remix18.json)(result);
   }
   return await auth_server_default.influencer.createSession({ id: result.id, module: "influencer", redirectTo });
 };
 function Login() {
-  const [searchParams] = (0, import_remix17.useSearchParams)();
-  const data = (0, import_remix17.useActionData)();
+  const [searchParams] = (0, import_remix18.useSearchParams)();
+  const data = (0, import_remix18.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Login"), /* @__PURE__ */ React.createElement("form", {
@@ -1776,29 +1818,29 @@ function Login() {
 var business_exports = {};
 __export(business_exports, {
   default: () => Index3,
-  loader: () => loader11
+  loader: () => loader10
 });
 init_react();
-var import_remix18 = __toESM(require_remix());
+var import_remix19 = __toESM(require_remix());
 var publicRoutes2 = [
   "/business/login",
   "/business/register"
 ];
-var loader11 = async ({ request }) => {
+var loader10 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   if (publicRoutes2.includes(pathname)) {
-    return (0, import_remix18.json)({ pathname });
+    return (0, import_remix19.json)({ pathname });
   }
   const business = await auth_server_default.business.get({ request });
-  return (0, import_remix18.json)({ business, pathname });
+  return (0, import_remix19.json)({ business, pathname });
 };
 function Index3() {
-  const data = (0, import_remix18.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  const data = (0, import_remix19.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/login"
-  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/register"
-  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/influencer/login"
   }, "Influencer?"))), data.business && /* @__PURE__ */ React.createElement("div", {
     className: "flex justify-end"
@@ -1814,28 +1856,28 @@ function Index3() {
     type: "submit"
   }, "Logout")), /* @__PURE__ */ React.createElement("ul", {
     className: "ml-4"
-  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business"
-  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/influencers"
-  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/partnerships"
-  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/inquiries"
-  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix18.Link, {
+  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/settings"
-  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix18.Outlet, null));
+  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix19.Outlet, null));
 }
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/partnerships/index.jsx
 var partnerships_exports2 = {};
 __export(partnerships_exports2, {
   default: () => partnerships_default2,
-  loader: () => loader12
+  loader: () => loader11
 });
 init_react();
-var import_remix19 = __toESM(require_remix());
-var loader12 = async ({ request }) => {
+var import_remix20 = __toESM(require_remix());
+var loader11 = async ({ request }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const partnerships = await db.partnership.findMany({
     where: {
@@ -1854,13 +1896,13 @@ var loader12 = async ({ request }) => {
     },
     include: { inquiries: true }
   });
-  return (0, import_remix19.json)({ partnerships });
+  return (0, import_remix20.json)({ partnerships });
 };
 var partnerships_default2 = () => {
-  const data = (0, import_remix19.useLoaderData)();
+  const data = (0, import_remix20.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Partnerships"), /* @__PURE__ */ React.createElement("ul", null, data.partnerships.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix19.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: `/business/partnerships/${id}`
   }, id, ' - status "', status, '"'))))));
 };
@@ -1869,19 +1911,19 @@ var partnerships_default2 = () => {
 var influencers_exports = {};
 __export(influencers_exports, {
   default: () => influencers_default,
-  loader: () => loader13
+  loader: () => loader12
 });
 init_react();
-var import_remix20 = __toESM(require_remix());
-var loader13 = async () => {
+var import_remix21 = __toESM(require_remix());
+var loader12 = async () => {
   const influencers = await db.influencer.findMany({ take: 5 });
-  return (0, import_remix20.json)({ influencers });
+  return (0, import_remix21.json)({ influencers });
 };
 var influencers_default = () => {
-  const data = (0, import_remix20.useLoaderData)();
+  const data = (0, import_remix21.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Browse influencers"), /* @__PURE__ */ React.createElement("ul", null, data.influencers.map(({ id, email }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
     to: `/business/influencers/${id}`
   }, email))))));
 };
@@ -1890,10 +1932,10 @@ var influencers_default = () => {
 var id_exports5 = {};
 __export(id_exports5, {
   default: () => id_default5,
-  loader: () => loader14
+  loader: () => loader13
 });
 init_react();
-var import_remix21 = __toESM(require_remix());
+var import_remix22 = __toESM(require_remix());
 var import_capitalize2 = __toESM(require("lodash/capitalize"));
 var statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: "bg-yellow-200",
@@ -1901,21 +1943,25 @@ var statusBgColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader14 = async ({ params }) => {
-  const partnership = await db.partnership.findUnique({
-    where: { id: params.id },
+var loader13 = async ({ request, params }) => {
+  const businessId = await auth_server_default.getSessionId({ request });
+  const [partnership] = await db.partnership.findMany({
+    where: { AND: [
+      { id: params.id },
+      { business: { is: { id: businessId } } }
+    ] },
     include: {
       inquiries: { skip: 0, take: 5 },
       influencer: true
     }
   });
   if (!partnership) {
-    return (0, import_remix21.redirect)("/business/partnerships");
+    return (0, import_remix22.redirect)("/business/partnerships");
   }
-  return (0, import_remix21.json)({ partnership });
+  return (0, import_remix22.json)({ partnership });
 };
 var id_default5 = () => {
-  const { partnership } = (0, import_remix21.useLoaderData)();
+  const { partnership } = (0, import_remix22.useLoaderData)();
   const statusBgColor = statusBgColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
@@ -1927,7 +1973,7 @@ var id_default5 = () => {
     href: partnership.agreement,
     target: "_blank",
     rel: "noreferrer"
-  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix21.Link, {
+  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix22.Link, {
     to: `/business/influencers/${partnership.influencer.id}`
   }, partnership.influencer.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col mt-5 md:flex-row md:mt-0"
@@ -1937,13 +1983,13 @@ var id_default5 = () => {
     className: "my-2"
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex"
-  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix22.Link, {
     to: `/business/inquiries?partnershipId=${partnership.id}`,
     "data-css-override": true,
     className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
   }, "See all inquiries")), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col border rounded shadow"
-  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix21.Link, {
+  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix22.Link, {
     key: id,
     "data-css-override": true,
     to: `/business/inquiries/${id}`
@@ -1957,10 +2003,10 @@ var id_exports6 = {};
 __export(id_exports6, {
   action: () => action7,
   default: () => id_default6,
-  loader: () => loader15
+  loader: () => loader14
 });
 init_react();
-var import_remix22 = __toESM(require_remix());
+var import_remix23 = __toESM(require_remix());
 var action7 = async ({ request, params }) => {
   const businessId = await auth_server_default.getSessionId({ request });
   const { id: newInquiryId } = await db.inquiry.create({ data: {
@@ -1971,20 +2017,20 @@ var action7 = async ({ request, params }) => {
       }
     }
   } });
-  return (0, import_remix22.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
+  return (0, import_remix23.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
 };
-var loader15 = async ({ params }) => {
+var loader14 = async ({ params }) => {
   const influencer = await db.influencer.findUnique({
     where: { id: params.id },
     include: { products: true }
   });
   if (!influencer) {
-    return (0, import_remix22.redirect)("/business/influencers");
+    return (0, import_remix23.redirect)("/business/influencers");
   }
-  return (0, import_remix22.json)({ influencer });
+  return (0, import_remix23.json)({ influencer });
 };
 var id_default6 = () => {
-  const { influencer } = (0, import_remix22.useLoaderData)();
+  const { influencer } = (0, import_remix23.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Influencer selected: ", influencer.name), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Products they offer:"), /* @__PURE__ */ React.createElement("ul", null, influencer.products.map((product, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
   }, product.name))), influencer.products.length > 0 && /* @__PURE__ */ React.createElement("form", {
@@ -2001,20 +2047,20 @@ __export(inquiries_exports2, {
   default: () => inquiries_default2
 });
 init_react();
-var import_remix23 = __toESM(require_remix());
+var import_remix24 = __toESM(require_remix());
 var inquiries_default2 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix23.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix24.Outlet, null);
 };
 
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/index.jsx
 var inquiries_exports3 = {};
 __export(inquiries_exports3, {
   default: () => inquiries_default3,
-  loader: () => loader16
+  loader: () => loader15
 });
 init_react();
-var import_remix24 = __toESM(require_remix());
-var loader16 = async ({ request }) => {
+var import_remix25 = __toESM(require_remix());
+var loader15 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   const businessId = await auth_server_default.getSessionId({ request });
   const inquiries = await db.inquiry.findMany({
@@ -2032,13 +2078,13 @@ var loader16 = async ({ request }) => {
     skip: 0,
     take: 20
   });
-  return (0, import_remix24.json)({ inquiries, pathname });
+  return (0, import_remix25.json)({ inquiries, pathname });
 };
 var inquiries_default3 = () => {
-  const { inquiries, pathname } = (0, import_remix24.useLoaderData)();
+  const { inquiries, pathname } = (0, import_remix25.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiries"), /* @__PURE__ */ React.createElement("ul", null, inquiries.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix24.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix25.Link, {
     to: pathname + "/" + id
   }, id, ' - status "', status, '"'))))));
 };
@@ -2047,10 +2093,11 @@ var inquiries_default3 = () => {
 var id_exports7 = {};
 __export(id_exports7, {
   action: () => action8,
-  default: () => id_default7
+  default: () => id_default7,
+  loader: () => loader16
 });
 init_react();
-var import_remix25 = __toESM(require_remix());
+var import_remix26 = __toESM(require_remix());
 var import_keys5 = __toESM(require("lodash/keys"));
 var action8 = async ({ request, params }) => {
   const id = params.id;
@@ -2064,30 +2111,33 @@ var action8 = async ({ request, params }) => {
   }
   if (action14 === INQUIRY.STATUS.countered) {
     const { id: newInquiryId } = await counterInquiry({ id });
-    return (0, import_remix25.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
+    return (0, import_remix26.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
   }
-  return (0, import_remix25.json)({});
+  return (0, import_remix26.json)({});
 };
-var id_default7 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix25.Outlet, null);
-};
-
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id/index.jsx
-var id_exports8 = {};
-__export(id_exports8, {
-  default: () => id_default8,
-  loader: () => loader17
-});
-init_react();
-var import_remix26 = __toESM(require_remix());
-var import_startCase7 = __toESM(require("lodash/startCase"));
-var loader17 = async ({ params }) => {
-  const id = params.id;
-  const inquiry = await db.inquiry.findUnique({
-    where: { id },
+var loader16 = async ({ request, params }) => {
+  const businessId = await auth_server_default.getSessionId({ request });
+  const [inquiry] = await db.inquiry.findMany({
+    where: { AND: [
+      { id: params.id },
+      {
+        partnership: {
+          business: {
+            is: { id: businessId }
+          }
+        }
+      }
+    ] },
     include: {
       inquiryLineItems: {
         include: { product: true }
+      },
+      partnership: {
+        include: {
+          influencer: {
+            include: { products: true }
+          }
+        }
       }
     }
   });
@@ -2096,15 +2146,27 @@ var loader17 = async ({ params }) => {
   }
   return (0, import_remix26.json)({ inquiry });
 };
+var id_default7 = () => {
+  return /* @__PURE__ */ React.createElement(import_remix26.Outlet, null);
+};
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id/index.jsx
+var id_exports8 = {};
+__export(id_exports8, {
+  default: () => id_default8
+});
+init_react();
+var import_remix27 = __toESM(require_remix());
+var import_startCase7 = __toESM(require("lodash/startCase"));
 var id_default8 = () => {
-  const { inquiry } = (0, import_remix26.useLoaderData)();
+  const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix26.Link, {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix27.Link, {
     to: `/business/inquiries/${inquiry.counterInquiryId}`
   }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix26.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix27.Link, {
     to: `/business/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "business" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -2125,91 +2187,44 @@ var edit_exports2 = {};
 __export(edit_exports2, {
   action: () => action9,
   default: () => edit_default2,
-  loader: () => loader18
+  loader: () => loader17
 });
 init_react();
 var import_react2 = require("react");
-var import_remix27 = __toESM(require_remix());
-var import_partition2 = __toESM(require("lodash/partition"));
+var import_remix28 = __toESM(require_remix());
 var import_keys6 = __toESM(require("lodash/keys"));
 var import_filter2 = __toESM(require("lodash/filter"));
-var import_omit3 = __toESM(require("lodash/omit"));
-var import_toPairs2 = __toESM(require("lodash/toPairs"));
+var import_first2 = __toESM(require("lodash/first"));
 var import_startCase8 = __toESM(require("lodash/startCase"));
+var import_toPairs2 = __toESM(require("lodash/toPairs"));
 var action9 = async ({ request, params }) => {
+  const inquiryId = params.id;
   const form = await request.formData();
-  const [status] = (0, import_filter2.default)((0, import_keys6.default)(Object.fromEntries(form)), (val) => (0, import_keys6.default)(INQUIRY.STATUS).includes(val));
-  const influencerId = form.get("influencerId");
-  const partnershipId = form.get("partnershipId");
-  const partnershipStatus = form.get("partnershipStatus");
-  const { products: influencerProducts } = await db.influencer.findUnique({
-    where: { id: influencerId },
-    include: { products: true }
-  });
-  const [productEntries, otherEntries] = (0, import_partition2.default)((0, import_toPairs2.default)(Object.fromEntries(form)), ([k]) => k.includes("product"));
-  const lineItemEntries = productEntries.reduce((acc, [k, v]) => {
-    const [idx, field] = k.split("-product-");
-    if (!acc[idx]) {
-      acc[idx] = {};
-    }
-    acc[idx][field] = v;
-    return acc;
-  }, []);
-  const data = (0, import_filter2.default)(otherEntries, ([k, v]) => Boolean(v)).reduce((acc, [k, v]) => __spreadProps(__spreadValues({}, acc), { [k]: v }), {});
-  const lineItems = lineItemEntries.map((obj) => {
-    const [{ id }] = influencerProducts.filter((prod) => prod.name === obj.name);
-    return __spreadProps(__spreadValues({}, (0, import_omit3.default)(obj, ["name", "id"])), {
-      product: { connect: { id } },
-      quantity: Number(obj.quantity)
-    });
-  });
-  await db.inquiryLineItem.deleteMany({ where: { inquiry: { is: { id: params.id } } } });
-  await db.inquiry.update({
-    where: { id: params.id },
-    data: __spreadProps(__spreadValues(__spreadValues(__spreadProps(__spreadValues({}, (0, import_omit3.default)(data, ["influencerId", "partnershipId", "partnershipStatus"])), {
-      status
-    }), data.startDate && { startDate: new Date(data.startDate).toISOString() }), data.endDate && { endDate: new Date(data.endDate).toISOString() }), {
-      inquiryLineItems: {
-        create: lineItems
-      }
-    })
-  });
-  if (partnershipStatus === PARTNERSHIP.STATUS.drafted && status === INQUIRY.STATUS.pending) {
-    await db.partnership.update({
-      where: { id: partnershipId },
-      data: { status: PARTNERSHIP.STATUS.pending }
-    });
-  }
-  return (0, import_remix27.redirect)(`/business/inquiries/${params.id}`);
+  const formData = Object.fromEntries(form);
+  const data = {
+    inquiryId,
+    notes: form.get("notes"),
+    endDate: form.get("endDate"),
+    startDate: form.get("startDate"),
+    lineItemData: (0, import_filter2.default)((0, import_toPairs2.default)(formData), ([k]) => k.includes("product")),
+    influencerId: form.get("influencerId"),
+    partnershipId: form.get("partnershipId"),
+    status: (0, import_first2.default)((0, import_filter2.default)((0, import_keys6.default)(formData), (val) => (0, import_keys6.default)(INQUIRY.STATUS).includes(val)))
+  };
+  await updateInquiry(data);
+  return (0, import_remix28.redirect)(`/business/inquiries/${inquiryId}`);
 };
-var loader18 = async ({ request, params }) => {
+var loader17 = async ({ request, params }) => {
   const { searchParams } = new URL(request.url);
-  const inquiry = await db.inquiry.findUnique({
-    where: { id: params.id },
-    include: {
-      inquiryLineItems: {
-        include: {
-          product: true
-        }
-      },
-      partnership: {
-        include: {
-          influencer: {
-            include: {
-              products: true
-            }
-          }
-        }
-      }
-    }
-  });
+  const inquiry = await db.inquiry.findUnique({ where: { id: params.id } });
   if (inquiry.status !== INQUIRY.STATUS.drafted) {
-    return (0, import_remix27.redirect)(`/business/inquiries/${params.id}`);
+    return (0, import_remix28.redirect)(`/business/inquiries/${params.id}`);
   }
-  return (0, import_remix27.json)({ inquiry, type: searchParams.get("type") });
+  return (0, import_remix28.json)({ type: searchParams.get("type") });
 };
 var edit_default2 = () => {
-  const { inquiry, type } = (0, import_remix27.useLoaderData)();
+  const { type } = (0, import_remix28.useLoaderData)();
+  const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react2.useState)(inquiry.inquiryLineItems);
   const newItem = influencer.products.length > 0 && {
@@ -2232,10 +2247,6 @@ var edit_default2 = () => {
     hidden: true,
     name: "partnershipId",
     defaultValue: inquiry.partnership.id
-  }), /* @__PURE__ */ React.createElement("input", {
-    hidden: true,
-    name: "partnershipStatus",
-    defaultValue: inquiry.partnership.status
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col m-2 md:w-1/2"
   }, /* @__PURE__ */ React.createElement("label", {
@@ -2329,7 +2340,7 @@ __export(register_exports2, {
   default: () => register_default2
 });
 init_react();
-var import_remix28 = __toESM(require_remix());
+var import_remix29 = __toESM(require_remix());
 var action10 = async ({ request }) => {
   const form = await request.formData();
   const redirectTo = form.get("redirectTo") || "/business";
@@ -2350,13 +2361,13 @@ var action10 = async ({ request }) => {
   };
   const result = await auth_server_default.business.register({ data });
   if (result.errors) {
-    return (0, import_remix28.json)(result);
+    return (0, import_remix29.json)(result);
   }
   return await auth_server_default.business.createSession({ id: result.id, redirectTo });
 };
 var register_default2 = () => {
-  const [searchParams] = (0, import_remix28.useSearchParams)();
-  const data = (0, import_remix28.useActionData)();
+  const [searchParams] = (0, import_remix29.useSearchParams)();
+  const data = (0, import_remix29.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Register"), /* @__PURE__ */ React.createElement("form", {
@@ -2408,10 +2419,10 @@ var settings_exports2 = {};
 __export(settings_exports2, {
   action: () => action11,
   default: () => settings_default2,
-  loader: () => loader19
+  loader: () => loader18
 });
 init_react();
-var import_remix29 = __toESM(require_remix());
+var import_remix30 = __toESM(require_remix());
 var import_keys7 = __toESM(require("lodash/keys"));
 var action11 = async ({ request }) => {
   const [form, { id: businessId }] = await Promise.all([
@@ -2441,16 +2452,16 @@ var action11 = async ({ request }) => {
     }
   });
   await auth_server_default.business.update({ id: businessId, data });
-  return (0, import_remix29.redirect)(new URL(request.url).pathname);
+  return (0, import_remix30.redirect)(new URL(request.url).pathname);
 };
-var loader19 = async ({ request }) => {
+var loader18 = async ({ request }) => {
   const id = await auth_server_default.business.requireId({ request });
   const business = await db.business.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix29.json)({ business });
+  return (0, import_remix30.json)({ business });
 };
 var settings_default2 = () => {
-  const { business } = (0, import_remix29.useLoaderData)();
-  const data = (0, import_remix29.useActionData)();
+  const { business } = (0, import_remix30.useLoaderData)();
+  const data = (0, import_remix30.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -2515,17 +2526,17 @@ var settings_default2 = () => {
 var business_exports2 = {};
 __export(business_exports2, {
   default: () => Index4,
-  loader: () => loader20
+  loader: () => loader19
 });
 init_react();
-var import_remix30 = __toESM(require_remix());
-var loader20 = async ({ request }) => {
+var import_remix31 = __toESM(require_remix());
+var loader19 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   const business = await auth_server_default.business.get({ request });
-  return (0, import_remix30.json)({ business, pathname });
+  return (0, import_remix31.json)({ business, pathname });
 };
 function Index4() {
-  const data = (0, import_remix30.useLoaderData)();
+  const data = (0, import_remix31.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, "Dashboard for ", data.business.name);
 }
 
@@ -2536,7 +2547,7 @@ __export(login_exports2, {
   default: () => Login2
 });
 init_react();
-var import_remix31 = __toESM(require_remix());
+var import_remix32 = __toESM(require_remix());
 var action12 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
@@ -2544,13 +2555,13 @@ var action12 = async ({ request }) => {
   const redirectTo = form.get("redirectTo") || "/business";
   const result = await auth_server_default.business.login({ email, password });
   if (result.errors) {
-    return (0, import_remix31.json)(result);
+    return (0, import_remix32.json)(result);
   }
   return await auth_server_default.business.createSession({ id: result.id, redirectTo });
 };
 function Login2() {
-  const [searchParams] = (0, import_remix31.useSearchParams)();
-  const data = (0, import_remix31.useActionData)();
+  const [searchParams] = (0, import_remix32.useSearchParams)();
+  const data = (0, import_remix32.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Login"), /* @__PURE__ */ React.createElement("form", {
@@ -2590,15 +2601,15 @@ var action13 = async ({ request }) => {
 // route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/index.jsx
 var routes_exports = {};
 __export(routes_exports, {
-  loader: () => loader21
+  loader: () => loader20
 });
 init_react();
-var import_remix32 = __toESM(require_remix());
-var loader21 = () => (0, import_remix32.redirect)("/business");
+var import_remix33 = __toESM(require_remix());
+var loader20 = () => (0, import_remix33.redirect)("/business");
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
 init_react();
-var assets_manifest_default = { "version": "2d437731", "entry": { "module": "/build/entry.client-5PDLM7XZ.js", "imports": ["/build/_shared/chunk-QO72BVG2.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-OOBDMLYI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-5P6DYX76.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-GTFZSHCF.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-5R3GKZYG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-QJTVG6WG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-LFKZGLGU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-RNIV6MKS.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-OZ7RY2JW.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-B7PIHIGL.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-2552SL7M.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-O5KJUBBV.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-WYXH5TFW.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-GFCL7E5D.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-Y2VY5T52.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-AFOB377H.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-J7XRGJHS.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-MJ7HJ26M.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-VAXEQLWT.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-ITYCECKU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-GWZM5L4A.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-FHBOPE5R.js", "imports": ["/build/_shared/chunk-H5I4JM5V.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-TR7IWVVF.js", "imports": ["/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-DHJT7OD3.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-JKRUKGG5.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-OZNUX6Q4.js", "imports": ["/build/_shared/chunk-HPEHE5I4.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-UYTLPICQ.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-VEHWOVRO.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-MWF7X7VA.js", "imports": ["/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-K6HEVX4V.js", "imports": ["/build/_shared/chunk-V2FHIDZW.js", "/build/_shared/chunk-FYFREUX6.js", "/build/_shared/chunk-3AHTGTBU.js", "/build/_shared/chunk-4QX3C23H.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-2D437731.js" };
+var assets_manifest_default = { "version": "a782a47e", "entry": { "module": "/build/entry.client-5PDLM7XZ.js", "imports": ["/build/_shared/chunk-QO72BVG2.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-OOBDMLYI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-5P6DYX76.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-GTFZSHCF.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-5R3GKZYG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-QJTVG6WG.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-LFKZGLGU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-MZ6ZX264.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-YKA74BJS.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-YDCTJZSH.js", "imports": ["/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-WHFIRAY6.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-4RK3EB5I.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-XDLSAMKE.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-OUTERKO6.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-6AGTJN5T.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-P4LRKMD4.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-J7XRGJHS.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-MJ7HJ26M.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-VAXEQLWT.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-ITYCECKU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-EKRKJL5U.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-Q2TO4ROO.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-4YJCDMZA.js", "imports": ["/build/_shared/chunk-OD5CVTYL.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-KFBNCF34.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-CVFMRT44.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-AMXHU7R4.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-MTWBBMMV.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-PUODG4TD.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-JFZQ5L7F.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-3HKIBOKG.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-A782A47E.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var entry = { module: entry_server_exports };

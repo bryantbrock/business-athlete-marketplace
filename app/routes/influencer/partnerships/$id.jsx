@@ -3,6 +3,7 @@ import capitalize from 'lodash/capitalize'
 import startCase from 'lodash/startCase'
 import {db} from '~/utils/db.server'
 import {INQUIRY, PARTNERSHIP} from '~/utils/constants'
+import Auth from '~/modules/auth/auth.server'
 
 const statusColors = {
   [PARTNERSHIP.STATUS.pending]: 'bg-yellow-200',
@@ -11,9 +12,13 @@ const statusColors = {
   [PARTNERSHIP.STATUS.cancelled]: 'bg-red-200',
 }
 
-export const loader = async ({params}) => {
-  const partnership = await db.partnership.findUnique({
-    where: {id: params.id},
+export const loader = async ({request, params}) => {
+  const influencerId = await Auth.getSessionId({request})
+  const [partnership] = await db.partnership.findMany({
+    where: {AND: [
+      {id: params.id},
+      {influencer: {is: {id: influencerId}}}
+    ]},
     include: {
       inquiries: {
         where: {NOT: {status: INQUIRY.STATUS.drafter}},

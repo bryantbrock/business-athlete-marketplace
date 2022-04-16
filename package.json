@@ -13,7 +13,8 @@
     "start": "node server.js",
     "prisma:migrate": "npx prisma migrate dev && npx prisma generate",
     "prisma:seed": "npx prisma db seed",
-    "db:reset": "dropdb business-athlete-marketplace && createdb business-athlete-marketplace && yarn prisma:migrate"
+    "db:reset": "dropdb business-athlete-marketplace && createdb business-athlete-marketplace && yarn prisma:migrate",
+    "cy:open": "npx cypress open"
   },
   "prisma": {
     "seed": "node --require esbuild-register prisma/seed.js"
@@ -39,6 +40,7 @@
     "@remix-run/eslint-config": "^1.3.2",
     "autoprefixer": "^10.4.4",
     "concurrently": "^7.0.0",
+    "cypress": "^9.5.4",
     "esbuild-register": "^3.3.2",
     "eslint": "^8.11.0",
     "postcss": "^8.4.12",

@@ -2,6 +2,7 @@ import {Link, json, useLoaderData, redirect} from 'remix'
 import {db} from '~/utils/db.server'
 import {PARTNERSHIP} from '~/utils/constants'
 import capitalize from 'lodash/capitalize'
+import Auth from '~/modules/auth/auth.server'
 
 const statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: 'bg-yellow-200',
@@ -10,9 +11,13 @@ const statusBgColors = {
   [PARTNERSHIP.STATUS.cancelled]: 'bg-red-200',
 }
 
-export const loader = async ({params}) => {
-  const partnership = await db.partnership.findUnique({
-    where: {id: params.id},
+export const loader = async ({request, params}) => {
+  const businessId = await Auth.getSessionId({request})
+  const [partnership] = await db.partnership.findMany({
+    where: {AND: [
+      {id: params.id},
+      {business: {is: {id: businessId}}}
+    ]},
     include: {
       inquiries: {skip: 0, take: 5},
       influencer: true

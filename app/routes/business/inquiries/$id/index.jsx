@@ -1,28 +1,10 @@
-import {json, Link, redirect, useLoaderData} from 'remix'
+import {Link} from 'remix'
 import startCase from 'lodash/startCase'
-import {db} from '~/utils/db.server'
 import {INQUIRY} from '~/utils/constants'
-
-export const loader = async ({params}) => {
-  const id = params.id
-  const inquiry = await db.inquiry.findUnique({
-    where: {id},
-    include: {
-      inquiryLineItems: {
-        include: {product: true}
-      }
-    }
-  })
-
-  if (!inquiry) {
-    return redirect('/business/inquiries')
-  }
-
-  return json({inquiry})
-}
+import {useParentLoaderData} from '~/utils/hooks'
 
 export default () => {
-  const {inquiry} = useLoaderData()
+  const {inquiry} = useParentLoaderData({key: 'inquiry'})
 
   return (
     <div>
