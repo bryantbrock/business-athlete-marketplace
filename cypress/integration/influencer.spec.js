@@ -11,7 +11,7 @@ describe(`Route: ${route}`, () => {
     cy.login(module)
 
     cy.url().should('not.include', `/${module}/login`)
-    cy.get('h1').should('contain', 'Dashboard')
+    cy.get('h2').should('contain', 'Dashboard')
 
     cy.logout(module)
   })

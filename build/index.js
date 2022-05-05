@@ -359,7 +359,7 @@ init_react();
 // server-entry-module:@remix-run/dev/server-build
 init_react();
 
-// app/entry.server.jsx
+// src/routes/client/entry.server.jsx
 var entry_server_exports = {};
 __export(entry_server_exports, {
   default: () => handleRequest
@@ -379,7 +379,7 @@ function handleRequest(request, responseStatusCode, responseHeaders, remixContex
   });
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/root.jsx
 var root_exports = {};
 __export(root_exports, {
   ErrorBoundary: () => ErrorBoundary,
@@ -389,13 +389,13 @@ __export(root_exports, {
 });
 init_react();
 
-// app/styles/app.css
-var app_default = "/build/_assets/app-E5YXHXAM.css";
+// src/routes/client/styles/output.css
+var output_default = "/build/_assets/output-5IAP565N.css";
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/root.jsx
 var import_remix2 = __toESM(require_remix());
 
-// app/utils/misc.js
+// src/routes/client/utils/misc.js
 init_react();
 var onServer = () => {
   try {
@@ -416,7 +416,7 @@ var inProduction = () => {
   }
 };
 
-// app/utils/email.server.js
+// src/routes/client/utils/email.server.js
 init_react();
 var import_nodemailer = __toESM(require("nodemailer"));
 var import_uuid = require("uuid");
@@ -443,7 +443,7 @@ var sendEmail = ({ error }) => {
   transporter.sendMail(options, (error2) => console.log(error2));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/root.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/root.jsx
 function meta() {
   return {
     charset: "utf-8",
@@ -452,7 +452,7 @@ function meta() {
   };
 }
 function links() {
-  return [{ rel: "stylesheet", href: app_default }];
+  return [{ rel: "stylesheet", href: output_default }];
 }
 var Document = ({ children, title }) => {
   return /* @__PURE__ */ React.createElement("html", {
@@ -475,7 +475,7 @@ function ErrorBoundary({ error }) {
   }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "App Error"), /* @__PURE__ */ React.createElement("pre", null, error.message)));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer.jsx
 var influencer_exports = {};
 __export(influencer_exports, {
   default: () => Index,
@@ -484,14 +484,14 @@ __export(influencer_exports, {
 init_react();
 var import_remix4 = __toESM(require_remix());
 
-// app/modules/auth/auth.server.js
+// src/routes/client/modules/auth/actions.server.js
 init_react();
 var import_keys = __toESM(require("lodash/keys"));
 var import_omit = __toESM(require("lodash/omit"));
 var import_pick = __toESM(require("lodash/pick"));
 var import_bcryptjs = __toESM(require("bcryptjs"));
 
-// app/utils/db.server.js
+// src/routes/client/utils/db.server.js
 init_react();
 var import_client = require("@prisma/client");
 var db;
@@ -506,7 +506,7 @@ if (false) {
   db = global.__db;
 }
 
-// app/modules/auth/auth.server.js
+// src/routes/client/modules/auth/actions.server.js
 var import_remix3 = __toESM(require_remix());
 var sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -646,7 +646,7 @@ var get = (module2) => async ({ request, include = null }) => {
     throw logout(module2)({ request });
   }
 };
-var auth_server_default = {
+var actions_server_default = {
   getSessionId,
   business: {
     login: login("business"),
@@ -668,7 +668,7 @@ var auth_server_default = {
   }
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer.jsx
 var publicRoutes = [
   "/influencer/login",
   "/influencer/register"
@@ -678,7 +678,7 @@ var loader = async ({ request }) => {
   if (publicRoutes.includes(pathname)) {
     return (0, import_remix4.json)({ pathname });
   }
-  const influencer = await auth_server_default.influencer.get({ request });
+  const influencer = await actions_server_default.influencer.get({ request });
   return (0, import_remix4.json)({ influencer, pathname });
 };
 function Index() {
@@ -718,7 +718,7 @@ function Index() {
   }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix4.Outlet, null));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/partnerships/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/partnerships/index.jsx
 var partnerships_exports = {};
 __export(partnerships_exports, {
   default: () => partnerships_default,
@@ -727,7 +727,7 @@ __export(partnerships_exports, {
 init_react();
 var import_remix5 = __toESM(require_remix());
 
-// app/utils/constants.js
+// src/routes/client/utils/constants.js
 init_react();
 var INQUIRY = {
   STATUS: {
@@ -768,9 +768,9 @@ var PRODUCT = {
   }
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/partnerships/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/partnerships/index.jsx
 var loader2 = async ({ request }) => {
-  const influencerId = await auth_server_default.getSessionId({ request });
+  const influencerId = await actions_server_default.getSessionId({ request });
   const partnerships = await db.partnership.findMany({
     where: {
       AND: [
@@ -792,54 +792,42 @@ var loader2 = async ({ request }) => {
 };
 var partnerships_default = () => {
   const data = (0, import_remix5.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Partnerships"), /* @__PURE__ */ React.createElement("ul", null, data.partnerships.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Partnerships"), /* @__PURE__ */ React.createElement("ul", null, data.partnerships.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
   }, /* @__PURE__ */ React.createElement(import_remix5.Link, {
     to: `/influencer/partnerships/${id}`
   }, id, ' - status "', status, '"'))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/reactivate/$email.jsx
-var email_exports = {};
-__export(email_exports, {
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/businesses/index.jsx
+var businesses_exports = {};
+__export(businesses_exports, {
+  default: () => businesses_default,
   loader: () => loader3
 });
 init_react();
 var import_remix6 = __toESM(require_remix());
-var loader3 = async ({ params }) => {
-  await db.influencer.update({ where: { email: params.email }, data: { isDeleted: false } });
-  return (0, import_remix6.redirect)("/influencer/login");
-};
-
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/businesses/index.jsx
-var businesses_exports = {};
-__export(businesses_exports, {
-  default: () => businesses_default,
-  loader: () => loader4
-});
-init_react();
-var import_remix7 = __toESM(require_remix());
-var loader4 = async () => {
+var loader3 = async () => {
   const businesses = await db.business.findMany({ take: 5 });
-  return (0, import_remix7.json)({ businesses });
+  return (0, import_remix6.json)({ businesses });
 };
 var businesses_default = () => {
-  const { businesses } = (0, import_remix7.useLoaderData)();
+  const { businesses } = (0, import_remix6.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Browse Businesses"), /* @__PURE__ */ React.createElement("ul", null, businesses.map(({ id, email }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix7.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix6.Link, {
     to: `/influencer/businesses/${id}`
   }, email))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/partnerships/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/partnerships/$id.jsx
 var id_exports = {};
 __export(id_exports, {
   default: () => id_default,
-  loader: () => loader5
+  loader: () => loader4
 });
 init_react();
-var import_remix8 = __toESM(require_remix());
+var import_remix7 = __toESM(require_remix());
 var import_capitalize = __toESM(require("lodash/capitalize"));
 var import_startCase = __toESM(require("lodash/startCase"));
 var statusColors = {
@@ -848,8 +836,8 @@ var statusColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader5 = async ({ request, params }) => {
-  const influencerId = await auth_server_default.getSessionId({ request });
+var loader4 = async ({ request, params }) => {
+  const influencerId = await actions_server_default.getSessionId({ request });
   const [partnership] = await db.partnership.findMany({
     where: { AND: [
       { id: params.id },
@@ -870,12 +858,12 @@ var loader5 = async ({ request, params }) => {
     }
   });
   if (!partnership) {
-    return (0, import_remix8.redirect)("/influencer/partnerships");
+    return (0, import_remix7.redirect)("/influencer/partnerships");
   }
-  return (0, import_remix8.json)({ partnership });
+  return (0, import_remix7.json)({ partnership });
 };
 var id_default = () => {
-  const { partnership } = (0, import_remix8.useLoaderData)();
+  const { partnership } = (0, import_remix7.useLoaderData)();
   const statusBgColor = statusColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
@@ -887,7 +875,7 @@ var id_default = () => {
     href: partnership.agreement,
     target: "_blank",
     rel: "noreferrer"
-  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Business: ", " ", /* @__PURE__ */ React.createElement(import_remix8.Link, {
+  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Business: ", " ", /* @__PURE__ */ React.createElement(import_remix7.Link, {
     to: `/influencer/businesses/${partnership.business.id}`
   }, partnership.business.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col mt-5 md:flex-row md:mt-0"
@@ -897,13 +885,13 @@ var id_default = () => {
     className: "my-2"
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex"
-  }, /* @__PURE__ */ React.createElement(import_remix8.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix7.Link, {
     to: `/influencer/inquiries?partnershipId=${partnership.id}`,
     "data-css-override": true,
     className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
   }, "See all inquiries")), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col border rounded shadow"
-  }, partnership.inquiries.map(({ id, createdAt, status, inquiryLineItems }) => /* @__PURE__ */ React.createElement(import_remix8.Link, {
+  }, partnership.inquiries.map(({ id, createdAt, status, inquiryLineItems }) => /* @__PURE__ */ React.createElement(import_remix7.Link, {
     key: id,
     "data-css-override": true,
     to: `/influencer/inquiries/${id}`
@@ -914,17 +902,17 @@ var id_default = () => {
   }, "- ", quantity, " amount of ", (0, import_startCase.default)(product.name), " costing $", product.price, "/ea every ", interval)))))))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/index.jsx
 var inquiries_exports = {};
 __export(inquiries_exports, {
   default: () => inquiries_default,
-  loader: () => loader6
+  loader: () => loader5
 });
 init_react();
-var import_remix9 = __toESM(require_remix());
-var loader6 = async ({ request }) => {
+var import_remix8 = __toESM(require_remix());
+var loader5 = async ({ request }) => {
   const { pathname } = new URL(request.url);
-  const influencerId = await auth_server_default.getSessionId({ request });
+  const influencerId = await actions_server_default.getSessionId({ request });
   const inquiries = await db.inquiry.findMany({
     where: { OR: [
       { AND: [
@@ -940,52 +928,52 @@ var loader6 = async ({ request }) => {
     skip: 0,
     take: 20
   });
-  return (0, import_remix9.json)({ inquiries, pathname });
+  return (0, import_remix8.json)({ inquiries, pathname });
 };
 var inquiries_default = () => {
-  const { inquiries, pathname } = (0, import_remix9.useLoaderData)();
+  const { inquiries, pathname } = (0, import_remix8.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiries"), /* @__PURE__ */ React.createElement("ul", null, inquiries.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix9.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix8.Link, {
     to: pathname + "/" + id
   }, id, ' - status "', status, '"'))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/businesses/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/businesses/$id.jsx
 var id_exports2 = {};
 __export(id_exports2, {
   default: () => id_default2,
-  loader: () => loader7
+  loader: () => loader6
 });
 init_react();
-var import_remix10 = __toESM(require_remix());
-var loader7 = async ({ request, params }) => {
+var import_remix9 = __toESM(require_remix());
+var loader6 = async ({ params }) => {
   const business = await db.business.findUnique({ where: { id: params.id } });
   if (!business) {
-    return (0, import_remix10.redirect)("/influencer/businesses");
+    return (0, import_remix9.redirect)("/influencer/businesses");
   }
-  return (0, import_remix10.json)({ business });
+  return (0, import_remix9.json)({ business });
 };
 var id_default2 = () => {
-  const { business } = (0, import_remix10.useLoaderData)();
+  const { business } = (0, import_remix9.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Business selected: ", business.name));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/$id.jsx
 var id_exports3 = {};
 __export(id_exports3, {
   action: () => action,
   default: () => id_default3,
-  loader: () => loader8
+  loader: () => loader7
 });
 init_react();
-var import_remix11 = __toESM(require_remix());
+var import_remix10 = __toESM(require_remix());
 var import_keys2 = __toESM(require("lodash/keys"));
 
-// app/modules/inquiry/actions.server.js
+// src/routes/client/modules/inquiry/actions.server.js
 init_react();
 
-// app/modules/legal/agreement.server.js
+// src/routes/client/modules/legal/agreement.server.js
 init_react();
 var import_html_pdf_node = __toESM(require("html-pdf-node"));
 var import_server2 = require("react-dom/server");
@@ -1059,7 +1047,7 @@ var generateAgreement = async ({ partnershipId, params }) => {
   return path;
 };
 
-// app/modules/inquiry/actions.server.js
+// src/routes/client/modules/inquiry/actions.server.js
 var import_sum = __toESM(require("lodash/sum"));
 var import_pick2 = __toESM(require("lodash/pick"));
 var import_map = __toESM(require("lodash/map"));
@@ -1194,7 +1182,7 @@ var updateInquiry = async ({
   }
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/$id.jsx
 var action = async ({ request, params }) => {
   const id = params.id;
   const form = await request.formData();
@@ -1207,12 +1195,12 @@ var action = async ({ request, params }) => {
   }
   if (action14 === INQUIRY.STATUS.countered) {
     const { id: newInquiryId } = await counterInquiry({ id });
-    return (0, import_remix11.redirect)(`/influencer/inquiries/${newInquiryId}/edit?type=counter`);
+    return (0, import_remix10.redirect)(`/influencer/inquiries/${newInquiryId}/edit?type=counter`);
   }
-  return (0, import_remix11.json)({});
+  return (0, import_remix10.json)({});
 };
-var loader8 = async ({ request, params }) => {
-  const influencerId = await auth_server_default.getSessionId({ request });
+var loader7 = async ({ request, params }) => {
+  const influencerId = await actions_server_default.getSessionId({ request });
   const [inquiry] = await db.inquiry.findMany({
     where: { AND: [
       { id: params.id },
@@ -1238,41 +1226,41 @@ var loader8 = async ({ request, params }) => {
     }
   });
   if (!inquiry) {
-    return (0, import_remix11.redirect)("/influencer/inquiries");
+    return (0, import_remix10.redirect)("/influencer/inquiries");
   }
-  return (0, import_remix11.json)({ inquiry });
+  return (0, import_remix10.json)({ inquiry });
 };
 var id_default3 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix11.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix10.Outlet, null);
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/$id/index.jsx
 var id_exports4 = {};
 __export(id_exports4, {
   default: () => id_default4
 });
 init_react();
-var import_remix13 = __toESM(require_remix());
+var import_remix12 = __toESM(require_remix());
 var import_startCase3 = __toESM(require("lodash/startCase"));
 
-// app/utils/hooks/useParentLoaderData.js
+// src/routes/client/utils/hooks/useParentLoaderData.js
 init_react();
-var import_remix12 = __toESM(require_remix());
+var import_remix11 = __toESM(require_remix());
 var useParentLoaderData = ({ key }) => {
-  const match = (0, import_remix12.useMatches)().find(({ data }) => data && data[key]);
+  const match = (0, import_remix11.useMatches)().find(({ data }) => data && data[key]);
   return match ? { [key]: match.data[key] } : {};
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/$id/index.jsx
 var id_default4 = () => {
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No"), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix13.Link, {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Countered?"), " ", inquiry.counterInquiryId ? "Yes" : "No"), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix12.Link, {
     to: `/influencer/inquiries/${inquiry.counterInquiryId}`
   }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix13.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase3.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "influencer" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix12.Link, {
     to: `/influencer/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "influencer" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -1288,7 +1276,7 @@ var id_default4 = () => {
   }, "Counter"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/inquiries/$id/edit.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/inquiries/$id/edit.jsx
 var edit_exports = {};
 __export(edit_exports, {
   action: () => action2,
@@ -1296,7 +1284,7 @@ __export(edit_exports, {
 });
 init_react();
 var import_react = require("react");
-var import_remix14 = __toESM(require_remix());
+var import_remix13 = __toESM(require_remix());
 var import_keys3 = __toESM(require("lodash/keys"));
 var import_filter = __toESM(require("lodash/filter"));
 var import_toPairs = __toESM(require("lodash/toPairs"));
@@ -1317,10 +1305,10 @@ var action2 = async ({ request, params }) => {
     status: (0, import_first.default)((0, import_filter.default)((0, import_keys3.default)(formData), (val) => (0, import_keys3.default)(INQUIRY.STATUS).includes(val)))
   };
   await updateInquiry(data);
-  return (0, import_remix14.redirect)(`/business/inquiries/${inquiryId}`);
+  return (0, import_remix13.redirect)(`/influencer/inquiries/${inquiryId}`);
 };
 var edit_default = () => {
-  const { type } = (0, import_remix14.useLoaderData)();
+  const type = "counter";
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react.useState)(inquiry.inquiryLineItems);
@@ -1430,17 +1418,17 @@ var edit_default = () => {
   }, "Save for later")));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/products.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/products.jsx
 var products_exports = {};
 __export(products_exports, {
   action: () => action3,
   default: () => products_default,
-  loader: () => loader9
+  loader: () => loader8
 });
 init_react();
-var import_remix15 = __toESM(require_remix());
+var import_remix14 = __toESM(require_remix());
 
-// app/partials/Icon.js
+// src/routes/client/partials/Icon.js
 init_react();
 var icons = {
   trash: {
@@ -1462,13 +1450,13 @@ var Icon_default = ({ name }) => {
   }, params)));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/products.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/products.jsx
 var import_values = __toESM(require("lodash/values"));
 var import_startCase5 = __toESM(require("lodash/startCase"));
 var addProduct = async ({ form, request }) => {
   const productName = form.get("name");
   const price = Number(form.get("price")).toFixed(2);
-  const influencerId = await auth_server_default.influencer.requireId({ request });
+  const influencerId = await actions_server_default.influencer.requireId({ request });
   const name = productName.toLowerCase().replace(/ /g, "-");
   await db.product.create({ data: {
     name,
@@ -1491,10 +1479,10 @@ var action3 = async ({ request }) => {
   if (_action === "deleteProduct") {
     await deleteProduct({ form });
   }
-  return (0, import_remix15.redirect)(pathname);
+  return (0, import_remix14.redirect)(pathname);
 };
-var loader9 = async ({ request }) => {
-  const id = await auth_server_default.influencer.requireId({ request });
+var loader8 = async ({ request }) => {
+  const id = await actions_server_default.influencer.requireId({ request });
   const products = await db.product.findMany({
     where: {
       influencer: {
@@ -1502,11 +1490,11 @@ var loader9 = async ({ request }) => {
       }
     }
   });
-  return (0, import_remix15.json)({ products });
+  return (0, import_remix14.json)({ products });
 };
 var products_default = () => {
-  const { products } = (0, import_remix15.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "Products"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("form", {
+  const { products } = (0, import_remix14.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Products"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "flex flex-col rounded-xl border p-4 my-2"
   }, /* @__PURE__ */ React.createElement("input", {
@@ -1558,19 +1546,19 @@ var products_default = () => {
   }))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/register.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/register.jsx
 var register_exports = {};
 __export(register_exports, {
   action: () => action4,
   default: () => register_default
 });
 init_react();
-var import_remix16 = __toESM(require_remix());
+var import_remix15 = __toESM(require_remix());
 
-// app/modules/auth/Input.js
+// src/routes/client/modules/auth/components/Input.js
 init_react();
 var import_startCase6 = __toESM(require("lodash/startCase"));
-var Input_default = (_a) => {
+var Input = (_a) => {
   var _b = _a, { data, name } = _b, opts = __objRest(_b, ["data", "name"]);
   return /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col"
@@ -1586,7 +1574,7 @@ var Input_default = (_a) => {
   }, data.errors[name]));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/register.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/register.jsx
 var action4 = async ({ request }) => {
   const form = await request.formData();
   const redirectTo = form.get("redirectTo") || "/influencer";
@@ -1605,15 +1593,15 @@ var action4 = async ({ request }) => {
       }
     }
   };
-  const result = await auth_server_default.influencer.register({ data });
+  const result = await actions_server_default.influencer.register({ data });
   if (result.errors) {
-    return (0, import_remix16.json)(result);
+    return (0, import_remix15.json)(result);
   }
-  return await auth_server_default.influencer.createSession({ id: result.id, redirectTo });
+  return await actions_server_default.influencer.createSession({ id: result.id, redirectTo });
 };
 var register_default = () => {
-  const [searchParams] = (0, import_remix16.useSearchParams)();
-  const data = (0, import_remix16.useActionData)();
+  const [searchParams] = (0, import_remix15.useSearchParams)();
+  const data = (0, import_remix15.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Register"), /* @__PURE__ */ React.createElement("form", {
@@ -1624,34 +1612,34 @@ var register_default = () => {
     readOnly: true,
     name: "redirectTo",
     value: searchParams.get("redirectTo") ?? void 0
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "name",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "email",
     type: "email",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "password",
     type: "password",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "instagram",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "phone",
     type: "number",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "street",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "city",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "state",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "zip",
     data
   }), /* @__PURE__ */ React.createElement("button", {
@@ -1660,25 +1648,25 @@ var register_default = () => {
   }, "Submit"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/settings.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/settings.jsx
 var settings_exports = {};
 __export(settings_exports, {
   action: () => action5,
   default: () => settings_default,
-  loader: () => loader10
+  loader: () => loader9
 });
 init_react();
-var import_remix17 = __toESM(require_remix());
+var import_remix16 = __toESM(require_remix());
 var import_keys4 = __toESM(require("lodash/keys"));
 var action5 = async ({ request }) => {
   const [form, { id: influencerId }] = await Promise.all([
     request.formData(),
-    auth_server_default.influencer.get({ request, include: { address: true } })
+    actions_server_default.influencer.get({ request, include: { address: true } })
   ]);
   const action14 = form.get("_action");
   if (action14 === "delete") {
     await db.influencer.delete({ where: { id: influencerId } });
-    return (0, import_remix17.redirect)("/influencer/login");
+    return (0, import_remix16.redirect)("/influencer/login");
   }
   const street = form.get("street");
   const city = form.get("city");
@@ -1702,21 +1690,21 @@ var action5 = async ({ request }) => {
       }
     }
   });
-  const res = await auth_server_default.influencer.update({ id: influencerId, data });
+  const res = await actions_server_default.influencer.update({ id: influencerId, data });
   if (res.errors) {
     return res;
   }
-  return (0, import_remix17.redirect)(new URL(request.url).pathname);
+  return (0, import_remix16.redirect)(new URL(request.url).pathname);
 };
-var loader10 = async ({ request }) => {
-  const id = await auth_server_default.influencer.requireId({ request });
+var loader9 = async ({ request }) => {
+  const id = await actions_server_default.influencer.requireId({ request });
   const influencer = await db.influencer.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix17.json)({ influencer });
+  return (0, import_remix16.json)({ influencer });
 };
 var settings_default = () => {
   var _a, _b, _c, _d;
-  const { influencer } = (0, import_remix17.useLoaderData)();
-  const data = (0, import_remix17.useActionData)();
+  const { influencer } = (0, import_remix16.useLoaderData)();
+  const data = (0, import_remix16.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -1725,49 +1713,49 @@ var settings_default = () => {
     readOnly: true,
     name: "currentPasshash",
     value: influencer.passhash
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "name",
     defaultValue: influencer.name
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "email",
     type: "email",
     defaultValue: influencer.email
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "phone",
     type: "number",
     defaultValue: influencer.phone
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "instagram",
     defaultValue: influencer.instagram
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "street",
     defaultValue: (_a = influencer.address) == null ? void 0 : _a.street
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "city",
     defaultValue: (_b = influencer.address) == null ? void 0 : _b.city
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "state",
     defaultValue: (_c = influencer.address) == null ? void 0 : _c.state
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "zip",
     defaultValue: (_d = influencer.address) == null ? void 0 : _d.zip
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "currentPassword",
     type: "password"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "password",
     type: "password"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "confirmPassword",
     type: "password"
@@ -1779,7 +1767,6 @@ var settings_default = () => {
     value: "update",
     className: "button"
   }, "Update"), /* @__PURE__ */ React.createElement("button", {
-    hidden: true,
     type: "submit",
     name: "_action",
     value: "delete",
@@ -1787,43 +1774,43 @@ var settings_default = () => {
   }, "Delete"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/index.jsx
 var influencer_exports2 = {};
 __export(influencer_exports2, {
   default: () => Index2
 });
 init_react();
-var import_remix18 = __toESM(require_remix());
+var import_remix17 = __toESM(require_remix());
 function Index2() {
-  const { data: { influencer } } = (0, import_remix18.useMatches)().find((item) => {
+  const { data: { influencer } } = (0, import_remix17.useMatches)().find((item) => {
     var _a;
     return (_a = item.data) == null ? void 0 : _a.influencer;
   });
-  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, "Dashboard for ", influencer.name));
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Dashboard for ", influencer.name));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/influencer/login.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/influencer/login.jsx
 var login_exports = {};
 __export(login_exports, {
   action: () => action6,
   default: () => Login
 });
 init_react();
-var import_remix19 = __toESM(require_remix());
+var import_remix18 = __toESM(require_remix());
 var action6 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
   const password = form.get("password");
   const redirectTo = form.get("redirectTo") || "/influencer";
-  const result = await auth_server_default.influencer.login({ email, password });
+  const result = await actions_server_default.influencer.login({ email, password });
   if (result.errors) {
-    return (0, import_remix19.json)(result);
+    return (0, import_remix18.json)(result);
   }
-  return await auth_server_default.influencer.createSession({ id: result.id, module: "influencer", redirectTo });
+  return await actions_server_default.influencer.createSession({ id: result.id, module: "influencer", redirectTo });
 };
 function Login() {
-  const [searchParams] = (0, import_remix19.useSearchParams)();
-  const data = (0, import_remix19.useActionData)();
+  const [searchParams] = (0, import_remix18.useSearchParams)();
+  const data = (0, import_remix18.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Influencer Login"), /* @__PURE__ */ React.createElement("form", {
@@ -1834,11 +1821,11 @@ function Login() {
     readOnly: true,
     name: "redirectTo",
     value: searchParams.get("redirectTo") ?? void 0
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     type: "email",
     name: "email"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     type: "password",
     name: "password"
@@ -1848,33 +1835,33 @@ function Login() {
   }, "Submit"))));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business.jsx
 var business_exports = {};
 __export(business_exports, {
   default: () => Index3,
-  loader: () => loader11
+  loader: () => loader10
 });
 init_react();
-var import_remix20 = __toESM(require_remix());
+var import_remix19 = __toESM(require_remix());
 var publicRoutes2 = [
   "/business/login",
   "/business/register"
 ];
-var loader11 = async ({ request }) => {
+var loader10 = async ({ request }) => {
   const { pathname } = new URL(request.url);
   if (publicRoutes2.includes(pathname)) {
-    return (0, import_remix20.json)({ pathname });
+    return (0, import_remix19.json)({ pathname });
   }
-  const business = await auth_server_default.business.get({ request });
-  return (0, import_remix20.json)({ business, pathname });
+  const business = await actions_server_default.business.get({ request });
+  return (0, import_remix19.json)({ business, pathname });
 };
 function Index3() {
-  const data = (0, import_remix20.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  const data = (0, import_remix19.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, !data.business && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/login"
-  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/register"
-  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/influencer/login"
   }, "Influencer?"))), data.business && /* @__PURE__ */ React.createElement("div", {
     className: "flex justify-end"
@@ -1890,29 +1877,29 @@ function Index3() {
     type: "submit"
   }, "Logout")), /* @__PURE__ */ React.createElement("ul", {
     className: "ml-4"
-  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business"
-  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/influencers"
-  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/partnerships"
-  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/inquiries"
-  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix20.Link, {
+  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix19.Link, {
     to: "/business/settings"
-  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix20.Outlet, null));
+  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix19.Outlet, null));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/partnerships/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/partnerships/index.jsx
 var partnerships_exports2 = {};
 __export(partnerships_exports2, {
   default: () => partnerships_default2,
-  loader: () => loader12
+  loader: () => loader11
 });
 init_react();
-var import_remix21 = __toESM(require_remix());
-var loader12 = async ({ request }) => {
-  const businessId = await auth_server_default.getSessionId({ request });
+var import_remix20 = __toESM(require_remix());
+var loader11 = async ({ request }) => {
+  const businessId = await actions_server_default.getSessionId({ request });
   const partnerships = await db.partnership.findMany({
     where: {
       AND: [
@@ -1930,58 +1917,58 @@ var loader12 = async ({ request }) => {
     },
     include: { inquiries: true }
   });
-  return (0, import_remix21.json)({ partnerships });
+  return (0, import_remix20.json)({ partnerships });
 };
 var partnerships_default2 = () => {
-  const data = (0, import_remix21.useLoaderData)();
+  const data = (0, import_remix20.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Partnerships"), /* @__PURE__ */ React.createElement("ul", null, data.partnerships.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix20.Link, {
     to: `/business/partnerships/${id}`
   }, id, ' - status "', status, '"'))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/influencers/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/influencers/index.jsx
 var influencers_exports = {};
 __export(influencers_exports, {
   default: () => influencers_default,
-  loader: () => loader13
+  loader: () => loader12
 });
 init_react();
-var import_remix22 = __toESM(require_remix());
-var loader13 = async () => {
+var import_remix21 = __toESM(require_remix());
+var loader12 = async () => {
   const influencers = await db.influencer.findMany({ take: 5 });
-  return (0, import_remix22.json)({ influencers });
+  return (0, import_remix21.json)({ influencers });
 };
 var influencers_default = () => {
-  const data = (0, import_remix22.useLoaderData)();
+  const data = (0, import_remix21.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Browse influencers"), /* @__PURE__ */ React.createElement("ul", null, data.influencers.map(({ id, email }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix22.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix21.Link, {
     to: `/business/influencers/${id}`
   }, email))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/reactivate/$email.jsx
-var email_exports2 = {};
-__export(email_exports2, {
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/reactivate/$email.jsx
+var email_exports = {};
+__export(email_exports, {
+  loader: () => loader13
+});
+init_react();
+var import_remix22 = __toESM(require_remix());
+var loader13 = async ({ params }) => {
+  await db.business.update({ where: { email: params.email }, data: { isDeleted: false } });
+  return (0, import_remix22.redirect)("/business/login");
+};
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/partnerships/$id.jsx
+var id_exports5 = {};
+__export(id_exports5, {
+  default: () => id_default5,
   loader: () => loader14
 });
 init_react();
 var import_remix23 = __toESM(require_remix());
-var loader14 = async ({ params }) => {
-  await db.business.update({ where: { email: params.email }, data: { isDeleted: false } });
-  return (0, import_remix23.redirect)("/business/login");
-};
-
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/partnerships/$id.jsx
-var id_exports5 = {};
-__export(id_exports5, {
-  default: () => id_default5,
-  loader: () => loader15
-});
-init_react();
-var import_remix24 = __toESM(require_remix());
 var import_capitalize2 = __toESM(require("lodash/capitalize"));
 var statusBgColors = {
   [PARTNERSHIP.STATUS.pending]: "bg-yellow-200",
@@ -1989,8 +1976,8 @@ var statusBgColors = {
   [PARTNERSHIP.STATUS.closed]: "bg-gray-200",
   [PARTNERSHIP.STATUS.cancelled]: "bg-red-200"
 };
-var loader15 = async ({ request, params }) => {
-  const businessId = await auth_server_default.getSessionId({ request });
+var loader14 = async ({ request, params }) => {
+  const businessId = await actions_server_default.getSessionId({ request });
   const [partnership] = await db.partnership.findMany({
     where: { AND: [
       { id: params.id },
@@ -2002,12 +1989,12 @@ var loader15 = async ({ request, params }) => {
     }
   });
   if (!partnership) {
-    return (0, import_remix24.redirect)("/business/partnerships");
+    return (0, import_remix23.redirect)("/business/partnerships");
   }
-  return (0, import_remix24.json)({ partnership });
+  return (0, import_remix23.json)({ partnership });
 };
 var id_default5 = () => {
-  const { partnership } = (0, import_remix24.useLoaderData)();
+  const { partnership } = (0, import_remix23.useLoaderData)();
   const statusBgColor = statusBgColors[partnership.status];
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "flex"
@@ -2019,7 +2006,7 @@ var id_default5 = () => {
     href: partnership.agreement,
     target: "_blank",
     rel: "noreferrer"
-  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix24.Link, {
+  }, "Contract")), /* @__PURE__ */ React.createElement("li", null, "Influencer: ", " ", /* @__PURE__ */ React.createElement(import_remix23.Link, {
     to: `/business/influencers/${partnership.influencer.id}`
   }, partnership.influencer.name)))), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col mt-5 md:flex-row md:mt-0"
@@ -2029,13 +2016,33 @@ var id_default5 = () => {
     className: "my-2"
   }), /* @__PURE__ */ React.createElement("div", {
     className: "flex"
-  }, /* @__PURE__ */ React.createElement(import_remix24.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix23.Link, {
     to: `/business/inquiries?partnershipId=${partnership.id}`,
     "data-css-override": true,
     className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
   }, "See all inquiries")), /* @__PURE__ */ React.createElement("div", {
     className: "flex flex-col border rounded shadow"
-  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix24.Link, {
+  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix23.Link, {
+    key: id,
+    "data-css-override": true,
+    to: `/business/inquiries/${id}`
+  }, /* @__PURE__ */ React.createElement("div", {
+    className: "p-2 hover:bg-gray-50 hover:cursor-pointer border-b"
+  }, /* @__PURE__ */ React.createElement("strong", null, "Date:"), " ", new Date(createdAt).toLocaleString(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", status)))))), /* @__PURE__ */ React.createElement("div", {
+    className: "flex flex-col mt-20 md:flex-row md:mt-0"
+  }, /* @__PURE__ */ React.createElement("div", {
+    className: "mt-10 mr-5 md:w-1/2"
+  }, /* @__PURE__ */ React.createElement("h2", null, "Messages"), /* @__PURE__ */ React.createElement("hr", {
+    className: "my-2"
+  }), /* @__PURE__ */ React.createElement("div", {
+    className: "flex"
+  }, /* @__PURE__ */ React.createElement(import_remix23.Link, {
+    to: `/business/inquiries?partnershipId=${partnership.id}`,
+    "data-css-override": true,
+    className: "bg-gray-100 hover:bg-gray-200 rounded-lg p-2 my-2"
+  }, "See all message")), /* @__PURE__ */ React.createElement("div", {
+    className: "flex flex-col border rounded shadow"
+  }, partnership.inquiries.map(({ id, createdAt, to, from, status }) => /* @__PURE__ */ React.createElement(import_remix23.Link, {
     key: id,
     "data-css-override": true,
     to: `/business/inquiries/${id}`
@@ -2044,17 +2051,17 @@ var id_default5 = () => {
   }, /* @__PURE__ */ React.createElement("strong", null, "Date:"), " ", new Date(createdAt).toLocaleString(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", status)))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/influencers/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/influencers/$id.jsx
 var id_exports6 = {};
 __export(id_exports6, {
   action: () => action7,
   default: () => id_default6,
-  loader: () => loader16
+  loader: () => loader15
 });
 init_react();
-var import_remix25 = __toESM(require_remix());
+var import_remix24 = __toESM(require_remix());
 var action7 = async ({ request, params }) => {
-  const businessId = await auth_server_default.getSessionId({ request });
+  const businessId = await actions_server_default.getSessionId({ request });
   const { id: newInquiryId } = await db.inquiry.create({ data: {
     partnership: {
       create: {
@@ -2063,20 +2070,20 @@ var action7 = async ({ request, params }) => {
       }
     }
   } });
-  return (0, import_remix25.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
+  return (0, import_remix24.redirect)(`/business/inquiries/${newInquiryId}/edit?type=new`);
 };
-var loader16 = async ({ params }) => {
+var loader15 = async ({ params }) => {
   const influencer = await db.influencer.findUnique({
     where: { id: params.id },
     include: { products: true }
   });
   if (!influencer) {
-    return (0, import_remix25.redirect)("/business/influencers");
+    return (0, import_remix24.redirect)("/business/influencers");
   }
-  return (0, import_remix25.json)({ influencer });
+  return (0, import_remix24.json)({ influencer });
 };
 var id_default6 = () => {
-  const { influencer } = (0, import_remix25.useLoaderData)();
+  const { influencer } = (0, import_remix24.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Influencer selected: ", influencer.name), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Products they offer:"), /* @__PURE__ */ React.createElement("ul", null, influencer.products.map((product, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
   }, product.name))), influencer.products.length > 0 && /* @__PURE__ */ React.createElement("form", {
@@ -2087,28 +2094,28 @@ var id_default6 = () => {
   }, "Inquire"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/inquiries.jsx
 var inquiries_exports2 = {};
 __export(inquiries_exports2, {
   default: () => inquiries_default2
 });
 init_react();
-var import_remix26 = __toESM(require_remix());
+var import_remix25 = __toESM(require_remix());
 var inquiries_default2 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix26.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix25.Outlet, null);
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/inquiries/index.jsx
 var inquiries_exports3 = {};
 __export(inquiries_exports3, {
   default: () => inquiries_default3,
-  loader: () => loader17
+  loader: () => loader16
 });
 init_react();
-var import_remix27 = __toESM(require_remix());
-var loader17 = async ({ request }) => {
+var import_remix26 = __toESM(require_remix());
+var loader16 = async ({ request }) => {
   const { pathname } = new URL(request.url);
-  const businessId = await auth_server_default.getSessionId({ request });
+  const businessId = await actions_server_default.getSessionId({ request });
   const inquiries = await db.inquiry.findMany({
     where: { OR: [
       { AND: [
@@ -2124,26 +2131,26 @@ var loader17 = async ({ request }) => {
     skip: 0,
     take: 20
   });
-  return (0, import_remix27.json)({ inquiries, pathname });
+  return (0, import_remix26.json)({ inquiries, pathname });
 };
 var inquiries_default3 = () => {
-  const { inquiries, pathname } = (0, import_remix27.useLoaderData)();
+  const { inquiries, pathname } = (0, import_remix26.useLoaderData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiries"), /* @__PURE__ */ React.createElement("ul", null, inquiries.map(({ id, status }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, /* @__PURE__ */ React.createElement(import_remix27.Link, {
+  }, /* @__PURE__ */ React.createElement(import_remix26.Link, {
     to: pathname + "/" + id
   }, id, ' - status "', status, '"'))))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/inquiries/$id.jsx
 var id_exports7 = {};
 __export(id_exports7, {
   action: () => action8,
   default: () => id_default7,
-  loader: () => loader18
+  loader: () => loader17
 });
 init_react();
-var import_remix28 = __toESM(require_remix());
+var import_remix27 = __toESM(require_remix());
 var import_keys5 = __toESM(require("lodash/keys"));
 var action8 = async ({ request, params }) => {
   const id = params.id;
@@ -2157,12 +2164,12 @@ var action8 = async ({ request, params }) => {
   }
   if (action14 === INQUIRY.STATUS.countered) {
     const { id: newInquiryId } = await counterInquiry({ id });
-    return (0, import_remix28.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
+    return (0, import_remix27.redirect)(`/business/inquiries/${newInquiryId}/edit?type=counter`);
   }
-  return (0, import_remix28.json)({});
+  return (0, import_remix27.json)({});
 };
-var loader18 = async ({ request, params }) => {
-  const businessId = await auth_server_default.getSessionId({ request });
+var loader17 = async ({ request, params }) => {
+  const businessId = await actions_server_default.getSessionId({ request });
   const [inquiry] = await db.inquiry.findMany({
     where: { AND: [
       { id: params.id },
@@ -2188,31 +2195,31 @@ var loader18 = async ({ request, params }) => {
     }
   });
   if (!inquiry) {
-    return (0, import_remix28.redirect)("/business/inquiries");
+    return (0, import_remix27.redirect)("/business/inquiries");
   }
-  return (0, import_remix28.json)({ inquiry });
+  return (0, import_remix27.json)({ inquiry });
 };
 var id_default7 = () => {
-  return /* @__PURE__ */ React.createElement(import_remix28.Outlet, null);
+  return /* @__PURE__ */ React.createElement(import_remix27.Outlet, null);
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/inquiries/$id/index.jsx
 var id_exports8 = {};
 __export(id_exports8, {
   default: () => id_default8
 });
 init_react();
-var import_remix29 = __toESM(require_remix());
+var import_remix28 = __toESM(require_remix());
 var import_startCase7 = __toESM(require("lodash/startCase"));
 var id_default8 = () => {
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Inquiry"), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", {
     className: "my-2"
-  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix29.Link, {
+  }, "Details"), /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Status:"), " ", inquiry.status), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Created:"), " ", new Date(inquiry.createdAt).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Start Date:"), " ", new Date(inquiry.startDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "End Date:"), " ", new Date(inquiry.endDate).toLocaleDateString()), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("strong", null, "Notes:"), " ", inquiry.notes), inquiry.counterInquiryId && /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix28.Link, {
     to: `/business/inquiries/${inquiry.counterInquiryId}`
   }, "Countered inquiry ", "->"))), /* @__PURE__ */ React.createElement("ul", null, inquiry.inquiryLineItems.map(({ product, quantity, interval }, idx) => /* @__PURE__ */ React.createElement("li", {
     key: idx
-  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix29.Link, {
+  }, "- ", quantity, " amount of ", (0, import_startCase7.default)(product.name), " costing $", product.price, "/ea every ", interval))), inquiry.from === "business" && inquiry.status === INQUIRY.STATUS.drafted && /* @__PURE__ */ React.createElement(import_remix28.Link, {
     to: `/business/inquiries/${inquiry.id}/edit`
   }, "Edit"), inquiry.from !== "business" && inquiry.status === INQUIRY.STATUS.pending && /* @__PURE__ */ React.createElement("form", {
     method: "post"
@@ -2228,16 +2235,16 @@ var id_default8 = () => {
   }, "Counter"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/inquiries/$id/edit.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/inquiries/$id/edit.jsx
 var edit_exports2 = {};
 __export(edit_exports2, {
   action: () => action9,
   default: () => edit_default2,
-  loader: () => loader19
+  loader: () => loader18
 });
 init_react();
 var import_react2 = require("react");
-var import_remix30 = __toESM(require_remix());
+var import_remix29 = __toESM(require_remix());
 var import_keys6 = __toESM(require("lodash/keys"));
 var import_filter2 = __toESM(require("lodash/filter"));
 var import_first2 = __toESM(require("lodash/first"));
@@ -2258,18 +2265,18 @@ var action9 = async ({ request, params }) => {
     status: (0, import_first2.default)((0, import_filter2.default)((0, import_keys6.default)(formData), (val) => (0, import_keys6.default)(INQUIRY.STATUS).includes(val)))
   };
   await updateInquiry(data);
-  return (0, import_remix30.redirect)(`/business/inquiries/${inquiryId}`);
+  return (0, import_remix29.redirect)(`/business/inquiries/${inquiryId}`);
 };
-var loader19 = async ({ request, params }) => {
+var loader18 = async ({ request, params }) => {
   const { searchParams } = new URL(request.url);
   const inquiry = await db.inquiry.findUnique({ where: { id: params.id } });
   if (inquiry.status !== INQUIRY.STATUS.drafted) {
-    return (0, import_remix30.redirect)(`/business/inquiries/${params.id}`);
+    return (0, import_remix29.redirect)(`/business/inquiries/${params.id}`);
   }
-  return (0, import_remix30.json)({ type: searchParams.get("type") });
+  return (0, import_remix29.json)({ type: searchParams.get("type") });
 };
 var edit_default2 = () => {
-  const { type } = (0, import_remix30.useLoaderData)();
+  const { type } = (0, import_remix29.useLoaderData)();
   const { inquiry } = useParentLoaderData({ key: "inquiry" });
   const { influencer } = inquiry.partnership;
   const [lineItems, setLineItems] = (0, import_react2.useState)(inquiry.inquiryLineItems);
@@ -2344,6 +2351,8 @@ var edit_default2 = () => {
     name: `${idx}-product-interval`,
     defaultValue: item.interval
   }, /* @__PURE__ */ React.createElement("option", {
+    value: "total"
+  }, "Total"), /* @__PURE__ */ React.createElement("option", {
     value: "day"
   }, "Day"), /* @__PURE__ */ React.createElement("option", {
     value: "2-day"
@@ -2379,14 +2388,14 @@ var edit_default2 = () => {
   }, "Save for later")));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/register.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/register.jsx
 var register_exports2 = {};
 __export(register_exports2, {
   action: () => action10,
   default: () => register_default2
 });
 init_react();
-var import_remix31 = __toESM(require_remix());
+var import_remix30 = __toESM(require_remix());
 var action10 = async ({ request }) => {
   const form = await request.formData();
   const redirectTo = form.get("redirectTo") || "/business";
@@ -2405,15 +2414,15 @@ var action10 = async ({ request }) => {
       }
     }
   };
-  const result = await auth_server_default.business.register({ data });
+  const result = await actions_server_default.business.register({ data });
   if (result.errors) {
-    return (0, import_remix31.json)(result);
+    return (0, import_remix30.json)(result);
   }
-  return await auth_server_default.business.createSession({ id: result.id, redirectTo });
+  return await actions_server_default.business.createSession({ id: result.id, redirectTo });
 };
 var register_default2 = () => {
-  const [searchParams] = (0, import_remix31.useSearchParams)();
-  const data = (0, import_remix31.useActionData)();
+  const [searchParams] = (0, import_remix30.useSearchParams)();
+  const data = (0, import_remix30.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Register"), /* @__PURE__ */ React.createElement("form", {
@@ -2424,34 +2433,34 @@ var register_default2 = () => {
     readOnly: true,
     name: "redirectTo",
     value: searchParams.get("redirectTo") ?? void 0
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "name",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "email",
     type: "email",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "password",
     type: "password",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "instagram",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "phone",
     type: "number",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "street",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "city",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "state",
     data
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     name: "zip",
     data
   }), /* @__PURE__ */ React.createElement("button", {
@@ -2460,25 +2469,25 @@ var register_default2 = () => {
   }, "Submit"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/settings.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/settings.jsx
 var settings_exports2 = {};
 __export(settings_exports2, {
   action: () => action11,
   default: () => settings_default2,
-  loader: () => loader20
+  loader: () => loader19
 });
 init_react();
-var import_remix32 = __toESM(require_remix());
+var import_remix31 = __toESM(require_remix());
 var import_keys7 = __toESM(require("lodash/keys"));
 var action11 = async ({ request }) => {
   const [form, { id: businessId }] = await Promise.all([
     request.formData(),
-    auth_server_default.business.get({ request, include: { address: true } })
+    actions_server_default.business.get({ request, include: { address: true } })
   ]);
   const action14 = form.get("_action");
   if (action14 === "delete") {
     await db.business.delete({ where: { id: businessId } });
-    return (0, import_remix32.redirect)("/business/login");
+    return (0, import_remix31.redirect)("/business/login");
   }
   const street = form.get("street");
   const city = form.get("city");
@@ -2502,21 +2511,21 @@ var action11 = async ({ request }) => {
       }
     }
   });
-  const res = await auth_server_default.business.update({ id: businessId, data });
+  const res = await actions_server_default.business.update({ id: businessId, data });
   if (res.errors) {
     return res;
   }
-  return (0, import_remix32.redirect)(new URL(request.url).pathname);
+  return (0, import_remix31.redirect)(new URL(request.url).pathname);
 };
-var loader20 = async ({ request }) => {
-  const id = await auth_server_default.business.requireId({ request });
+var loader19 = async ({ request }) => {
+  const id = await actions_server_default.business.requireId({ request });
   const business = await db.business.findUnique({ where: { id }, include: { address: true } });
-  return (0, import_remix32.json)({ business });
+  return (0, import_remix31.json)({ business });
 };
 var settings_default2 = () => {
   var _a, _b, _c, _d;
-  const { business } = (0, import_remix32.useLoaderData)();
-  const data = (0, import_remix32.useActionData)();
+  const { business } = (0, import_remix31.useLoaderData)();
+  const data = (0, import_remix31.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Account Settings"), /* @__PURE__ */ React.createElement("form", {
     method: "post",
     className: "lg:w-1/2"
@@ -2525,49 +2534,49 @@ var settings_default2 = () => {
     readOnly: true,
     name: "currentPasshash",
     value: business.passhash
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "name",
     defaultValue: business.name
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "email",
     type: "email",
     defaultValue: business.email
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "phone",
     type: "number",
     defaultValue: business.phone
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "instagram",
     defaultValue: business.instagram
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "street",
     defaultValue: (_a = business.address) == null ? void 0 : _a.street
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "city",
     defaultValue: (_b = business.address) == null ? void 0 : _b.city
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "state",
     defaultValue: (_c = business.address) == null ? void 0 : _c.state
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "zip",
     defaultValue: (_d = business.address) == null ? void 0 : _d.zip
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "currentPassword",
     type: "password"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "password",
     type: "password"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     name: "confirmPassword",
     type: "password"
@@ -2587,46 +2596,46 @@ var settings_default2 = () => {
   }, "Delete"))));
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/index.jsx
 var business_exports2 = {};
 __export(business_exports2, {
   default: () => Index4,
-  loader: () => loader21
+  loader: () => loader20
 });
 init_react();
-var import_remix33 = __toESM(require_remix());
-var loader21 = async ({ request }) => {
+var import_remix32 = __toESM(require_remix());
+var loader20 = async ({ request }) => {
   const { pathname } = new URL(request.url);
-  const business = await auth_server_default.business.get({ request });
-  return (0, import_remix33.json)({ business, pathname });
+  const business = await actions_server_default.business.get({ request });
+  return (0, import_remix32.json)({ business, pathname });
 };
 function Index4() {
-  const data = (0, import_remix33.useLoaderData)();
-  return /* @__PURE__ */ React.createElement("div", null, "Dashboard for ", data.business.name);
+  const data = (0, import_remix32.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Dashboard for ", data.business.name));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/business/login.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/business/login.jsx
 var login_exports2 = {};
 __export(login_exports2, {
   action: () => action12,
   default: () => Login2
 });
 init_react();
-var import_remix34 = __toESM(require_remix());
+var import_remix33 = __toESM(require_remix());
 var action12 = async ({ request }) => {
   const form = await request.formData();
   const email = form.get("email");
   const password = form.get("password");
   const redirectTo = form.get("redirectTo") || "/business";
-  const result = await auth_server_default.business.login({ email, password });
+  const result = await actions_server_default.business.login({ email, password });
   if (result.errors) {
-    return (0, import_remix34.json)(result);
+    return (0, import_remix33.json)(result);
   }
-  return await auth_server_default.business.createSession({ id: result.id, redirectTo });
+  return await actions_server_default.business.createSession({ id: result.id, redirectTo });
 };
 function Login2() {
-  const [searchParams] = (0, import_remix34.useSearchParams)();
-  const data = (0, import_remix34.useActionData)();
+  const [searchParams] = (0, import_remix33.useSearchParams)();
+  const data = (0, import_remix33.useActionData)();
   return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", {
     className: "my-2"
   }, /* @__PURE__ */ React.createElement("h1", null, "Business Login"), /* @__PURE__ */ React.createElement("form", {
@@ -2637,11 +2646,11 @@ function Login2() {
     readOnly: true,
     name: "redirectTo",
     value: searchParams.get("redirectTo") ?? void 0
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     type: "email",
     name: "email"
-  }), /* @__PURE__ */ React.createElement(Input_default, {
+  }), /* @__PURE__ */ React.createElement(Input, {
     data,
     type: "password",
     name: "password"
@@ -2651,7 +2660,64 @@ function Login2() {
   }, "Submit"))));
 }
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/logout.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/$module.jsx
+var module_exports = {};
+__export(module_exports, {
+  default: () => Index5,
+  loader: () => loader21
+});
+init_react();
+var import_remix34 = __toESM(require_remix());
+var import_flatten = __toESM(require("lodash/flatten"));
+var modules = ["influencer", "business"];
+var publicRoutes3 = (0, import_flatten.default)([
+  modules.map((module2) => `/${module2}/login`),
+  modules.map((module2) => `/${module2}/register`)
+]);
+var loader21 = async ({ request, params }) => {
+  const { pathname } = new URL(request.url);
+  if (publicRoutes3.includes(pathname)) {
+    return (0, import_remix34.json)({ pathname });
+  }
+  const account = await actions_server_default[params.module].get({ request });
+  return (0, import_remix34.json)({ account, module });
+};
+function Index5() {
+  const { account, module: module2 } = (0, import_remix34.useLoaderData)();
+  return /* @__PURE__ */ React.createElement("div", null, !account && /* @__PURE__ */ React.createElement("ul", null, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/login>`
+  }, "Login")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/register`
+  }, "Sign Up")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: "/$influencer/login"
+  }, "Influencer?"))), account && /* @__PURE__ */ React.createElement("div", {
+    className: "flex justify-end"
+  }, /* @__PURE__ */ React.createElement("span", null, `Hi ${account.name}`), /* @__PURE__ */ React.createElement("form", {
+    action: "/logout",
+    method: "post",
+    className: "ml-4"
+  }, /* @__PURE__ */ React.createElement("input", {
+    type: "hidden",
+    name: "module",
+    value: module2
+  }), /* @__PURE__ */ React.createElement("button", {
+    type: "submit"
+  }, "Logout")), /* @__PURE__ */ React.createElement("ul", {
+    className: "ml-4"
+  }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}`
+  }, "Dashboard")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/influencers`
+  }, "Browse influencers")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/partnerships`
+  }, "Partnerships")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/inquiries`
+  }, "Inquiries")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(import_remix34.Link, {
+    to: `/${module2}/settings`
+  }, "Settings")))), /* @__PURE__ */ React.createElement(import_remix34.Outlet, null));
+}
+
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/logout.jsx
 var logout_exports = {};
 __export(logout_exports, {
   action: () => action13
@@ -2660,10 +2726,10 @@ init_react();
 var action13 = async ({ request }) => {
   const form = await request.formData();
   const module2 = form.get("module") || "business";
-  return auth_server_default[module2].logout({ request });
+  return actions_server_default[module2].logout({ request });
 };
 
-// route:/Users/bryantbrock/Programs/business-athlete-marketplace/app/routes/index.jsx
+// route:/Users/bryantbrock/Programs/business-athlete-marketplace/src/routes/client/routes/index.jsx
 var routes_exports = {};
 __export(routes_exports, {
   loader: () => loader22
@@ -2674,7 +2740,7 @@ var loader22 = () => (0, import_remix35.redirect)("/business");
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
 init_react();
-var assets_manifest_default = { "version": "06c96052", "entry": { "module": "/build/entry.client-HOXSNM7B.js", "imports": ["/build/_shared/chunk-747ETDNF.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-JM2UDOB3.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-DISVV3AA.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-5LITQIJ7.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-L4CDAXFH.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-PXWLRYI5.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-ALM66LAI.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-6THGNAB2.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-YML2OZID.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-NIXHHWMA.js", "imports": ["/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-HYM2Y4KX.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-SHA6BUOF.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-NZPMWZNT.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-YIIH4IOV.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-3Z6TOEKQ.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/reactivate/$email": { "id": "routes/business/reactivate/$email", "parentId": "routes/business", "path": "reactivate/:email", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/reactivate/$email-IOVEN5PR.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-JSOSJH4D.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-GILUTOXM.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-BHG62XP6.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-EZV3YM7O.js", "imports": ["/build/_shared/chunk-SHA6BUOF.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-6IFBW5BZ.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-KKV35NW5.js", "imports": ["/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-BQH26XQR.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-ZHLR753K.js", "imports": ["/build/_shared/chunk-X7Z7AJQI.js", "/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-AB6ECQ2I.js", "imports": ["/build/_shared/chunk-QSGNZWKG.js", "/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-O6J7LTPD.js", "imports": ["/build/_shared/chunk-L5I77GRQ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-JW2HZ7JM.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-K5JWSCJD.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-T2FDNYC5.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-UYR2BIYA.js", "imports": ["/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-UWLVSU27.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-IM2ULJSR.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/reactivate/$email": { "id": "routes/influencer/reactivate/$email", "parentId": "routes/influencer", "path": "reactivate/:email", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/reactivate/$email-BUX7VYD5.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-7IZD3JGV.js", "imports": ["/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-XBHUYFJG.js", "imports": ["/build/_shared/chunk-HYRRJ2JH.js", "/build/_shared/chunk-A7MG5ZZZ.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-36JN244Y.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-764UH4WK.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-06C96052.js" };
+var assets_manifest_default = { "version": "bf289bff", "entry": { "module": "/build/entry.client-YTRMKOZX.js", "imports": ["/build/_shared/chunk-747ETDNF.js", "/build/_shared/chunk-6BO74FWO.js"] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "module": "/build/root-VEWNMEFS.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": true }, "routes/$module": { "id": "routes/$module", "parentId": "root", "path": ":module", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/$module-JK66BWF6.js", "imports": ["/build/_shared/chunk-QAOZB6RQ.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-WCDKM5YB.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business": { "id": "routes/business", "parentId": "root", "path": "business", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business-DR53HRM4.js", "imports": ["/build/_shared/chunk-WCDKM5YB.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/index": { "id": "routes/business/index", "parentId": "routes/business", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/index-GO2SVYAU.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/$id": { "id": "routes/business/influencers/$id", "parentId": "routes/business", "path": "influencers/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/influencers/$id-I7TXR2SH.js", "imports": ["/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/influencers/index": { "id": "routes/business/influencers/index", "parentId": "routes/business", "path": "influencers", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/influencers/index-7WSAMXXN.js", "imports": ["/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries": { "id": "routes/business/inquiries", "parentId": "routes/business", "path": "inquiries", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries-R64OJ5WU.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id": { "id": "routes/business/inquiries/$id", "parentId": "routes/business/inquiries", "path": ":id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id-CH6SHCAA.js", "imports": ["/build/_shared/chunk-F4PK3OUQ.js", "/build/_shared/chunk-7MAC2FL4.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-WCDKM5YB.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/edit": { "id": "routes/business/inquiries/$id/edit", "parentId": "routes/business/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/edit-TSYRGQM2.js", "imports": ["/build/_shared/chunk-4BUWWRHF.js", "/build/_shared/chunk-QAOZB6RQ.js", "/build/_shared/chunk-HR6HCC5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/$id/index": { "id": "routes/business/inquiries/$id/index", "parentId": "routes/business/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/$id/index-ZHF2552D.js", "imports": ["/build/_shared/chunk-HR6HCC5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/inquiries/index": { "id": "routes/business/inquiries/index", "parentId": "routes/business/inquiries", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/business/inquiries/index-JGCACUDC.js", "imports": ["/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-WCDKM5YB.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/login": { "id": "routes/business/login", "parentId": "routes/business", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/login-IHM6BZSP.js", "imports": ["/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/$id": { "id": "routes/business/partnerships/$id", "parentId": "routes/business", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/$id-GYPLCXP3.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/partnerships/index": { "id": "routes/business/partnerships/index", "parentId": "routes/business", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/business/partnerships/index-O52EPFQY.js", "imports": ["/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/reactivate/$email": { "id": "routes/business/reactivate/$email", "parentId": "routes/business", "path": "reactivate/:email", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/reactivate/$email-P5AJX3PE.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/register": { "id": "routes/business/register", "parentId": "routes/business", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/register-66QDKKTR.js", "imports": ["/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/business/settings": { "id": "routes/business/settings", "parentId": "routes/business", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/business/settings-4PX65BZT.js", "imports": ["/build/_shared/chunk-7MAC2FL4.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/index": { "id": "routes/index", "parentId": "root", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/index-A4TMAXAO.js", "imports": void 0, "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer": { "id": "routes/influencer", "parentId": "root", "path": "influencer", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer-SM5WAYQQ.js", "imports": ["/build/_shared/chunk-WCDKM5YB.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/$id": { "id": "routes/influencer/businesses/$id", "parentId": "routes/influencer", "path": "businesses/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/$id-TSWEPDVG.js", "imports": ["/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/businesses/index": { "id": "routes/influencer/businesses/index", "parentId": "routes/influencer", "path": "businesses", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/businesses/index-CZUX3GPD.js", "imports": ["/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/index": { "id": "routes/influencer/index", "parentId": "routes/influencer", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/index-YFRIMRQH.js", "imports": void 0, "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id": { "id": "routes/influencer/inquiries/$id", "parentId": "routes/influencer", "path": "inquiries/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id-Y3FVR5H3.js", "imports": ["/build/_shared/chunk-F4PK3OUQ.js", "/build/_shared/chunk-7MAC2FL4.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/edit": { "id": "routes/influencer/inquiries/$id/edit", "parentId": "routes/influencer/inquiries/$id", "path": "edit", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/edit-5UNLF5HO.js", "imports": ["/build/_shared/chunk-4BUWWRHF.js", "/build/_shared/chunk-QAOZB6RQ.js", "/build/_shared/chunk-HR6HCC5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/$id/index": { "id": "routes/influencer/inquiries/$id/index", "parentId": "routes/influencer/inquiries/$id", "path": void 0, "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/$id/index-UKMRZLID.js", "imports": ["/build/_shared/chunk-HR6HCC5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js"], "hasAction": false, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/inquiries/index": { "id": "routes/influencer/inquiries/index", "parentId": "routes/influencer", "path": "inquiries", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/inquiries/index-K4SHRNSK.js", "imports": ["/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/login": { "id": "routes/influencer/login", "parentId": "routes/influencer", "path": "login", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/login-6NWB64A7.js", "imports": ["/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/$id": { "id": "routes/influencer/partnerships/$id", "parentId": "routes/influencer", "path": "partnerships/:id", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/$id-REBE7UHI.js", "imports": ["/build/_shared/chunk-SWIJWD5S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/partnerships/index": { "id": "routes/influencer/partnerships/index", "parentId": "routes/influencer", "path": "partnerships", "index": true, "caseSensitive": void 0, "module": "/build/routes/influencer/partnerships/index-RPOOUWDB.js", "imports": ["/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": false, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/products": { "id": "routes/influencer/products", "parentId": "routes/influencer", "path": "products", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/products-3FQNCNR5.js", "imports": ["/build/_shared/chunk-7MAC2FL4.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-EUNUR5GA.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/register": { "id": "routes/influencer/register", "parentId": "routes/influencer", "path": "register", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/register-Q4RURF7H.js", "imports": ["/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js"], "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/influencer/settings": { "id": "routes/influencer/settings", "parentId": "routes/influencer", "path": "settings", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/influencer/settings-7OCQDS32.js", "imports": ["/build/_shared/chunk-7MAC2FL4.js", "/build/_shared/chunk-G5VU6PTB.js", "/build/_shared/chunk-ZDZ65G6S.js", "/build/_shared/chunk-2HF2H7X7.js", "/build/_shared/chunk-3QR3AR5V.js", "/build/_shared/chunk-OQGWGG43.js", "/build/_shared/chunk-HWM6V5WV.js"], "hasAction": true, "hasLoader": true, "hasCatchBoundary": false, "hasErrorBoundary": false }, "routes/logout": { "id": "routes/logout", "parentId": "root", "path": "logout", "index": void 0, "caseSensitive": void 0, "module": "/build/routes/logout-HQ37BQ57.js", "imports": void 0, "hasAction": true, "hasLoader": false, "hasCatchBoundary": false, "hasErrorBoundary": false } }, "url": "/build/manifest-BF289BFF.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var entry = { module: entry_server_exports };
@@ -2702,14 +2768,6 @@ var routes = {
     index: true,
     caseSensitive: void 0,
     module: partnerships_exports
-  },
-  "routes/influencer/reactivate/$email": {
-    id: "routes/influencer/reactivate/$email",
-    parentId: "routes/influencer",
-    path: "reactivate/:email",
-    index: void 0,
-    caseSensitive: void 0,
-    module: email_exports
   },
   "routes/influencer/businesses/index": {
     id: "routes/influencer/businesses/index",
@@ -2837,7 +2895,7 @@ var routes = {
     path: "reactivate/:email",
     index: void 0,
     caseSensitive: void 0,
-    module: email_exports2
+    module: email_exports
   },
   "routes/business/partnerships/$id": {
     id: "routes/business/partnerships/$id",
@@ -2926,6 +2984,14 @@ var routes = {
     index: void 0,
     caseSensitive: void 0,
     module: login_exports2
+  },
+  "routes/$module": {
+    id: "routes/$module",
+    parentId: "root",
+    path: ":module",
+    index: void 0,
+    caseSensitive: void 0,
+    module: module_exports
   },
   "routes/logout": {
     id: "routes/logout",

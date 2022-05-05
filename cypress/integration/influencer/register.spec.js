@@ -6,7 +6,7 @@ describe(`Route: ${route}`, () => {
     cy.visit(route)
   })
 
-  it(`Registers & then deletes a new ${module}`, () => {
+  it(`Registers a new ${module}`, () => {
     const testData = {
       name: 'Test',
       email: 'test@test.com',
@@ -32,6 +32,6 @@ describe(`Route: ${route}`, () => {
     cy.get('input[name="phone"]').should('have.value', testData.phone)
     cy.get('input[name="street"]').should('have.value', testData.street)
 
-    cy.get('button[value="delete"]').click({force: true})
+    cy.get('button[value="delete"]').click()
   })
 })

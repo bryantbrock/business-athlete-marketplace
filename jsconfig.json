@@ -12,10 +12,10 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "@client/*": ["src/routes/client/*"],
+      "@api/*": ["src/routes/api/*"],
+      "@domain/*": ["src/domain/*"]
     },
-
-    // Remix takes care of building everything in `remix build`.
     "noEmit": true
   }
 }

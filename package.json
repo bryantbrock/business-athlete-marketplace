@@ -6,15 +6,17 @@
   "sideEffects": false,
   "scripts": {
     "build": "yarn build:css && remix build",
-    "build:css": "tailwindcss -m -i ./styles/app.css -o app/styles/app.css",
-    "dev": "concurrently \"yarn dev:css\" \"remix dev\"",
-    "dev:css": "tailwindcss -w -i ./styles/app.css -o app/styles/app.css",
+    "build:css": "tailwindcss -m -i ./src/routes/client/styles/input.css -o ./src/routes/client/styles/output.css",
+    "dev:api": "nodemon server.js",
+    "dev:client": "concurrently \"yarn dev:css\" \"remix dev\"",
+    "dev:css": "tailwindcss -w -i ./src/routes/client/styles/input.css -o ./src/routes/client/styles/output.css",
     "postinstall": "remix setup node",
     "start": "node server.js",
     "prisma:migrate": "npx prisma migrate dev && npx prisma generate",
     "prisma:seed": "npx prisma db seed",
     "db:reset": "dropdb business-athlete-marketplace && createdb business-athlete-marketplace && yarn prisma:migrate",
     "cy:open": "npx cypress open",
+    "cy:run": "npx cypress run",
     "test": "docker run --ipc=host -it -v $PWD:/e2e -w /e2e -e CYPRESS_baseUrl=http://host.docker.internal:3000 -e CYPRESS_VIDEO=false cypress/included:3.3.1"
   },
   "prisma": {
@@ -44,6 +46,7 @@
     "cypress": "^9.5.4",
     "esbuild-register": "^3.3.2",
     "eslint": "^8.11.0",
+    "nodemon": "^2.0.16",
     "postcss": "^8.4.12",
     "prisma": "^3.11.0",
     "tailwindcss": "^3.0.23"

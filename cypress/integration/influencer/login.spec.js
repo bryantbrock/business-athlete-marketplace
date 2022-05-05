@@ -10,7 +10,7 @@ describe(`Route: ${route}`, () => {
     cy.get('input[name="password"]').type(fixture.password)
     cy.get('button[type="submit"]').click()
 
-    cy.get('h1').contains(`Dashboard for ${fixture.name}`)
+    cy.get('h2').contains(`Dashboard for ${fixture.name}`)
     cy.logout(module)
   })
 })
