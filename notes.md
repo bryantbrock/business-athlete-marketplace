@@ -20,3 +20,37 @@ Solution
 Put together
 
 Work on the workflow consolidation, and marketing content, brainstorm visualizations.
+
+### Meeting notes
+
+```ts
+type InfluencerCategory = {
+  name: 'football' | 'hiking' | 'photography';
+}
+
+type BusinessCategory = {
+  name: 'retail' | 'finance';
+}
+
+type Business = {
+  settings: {
+    businessCategories: BusinessCategory[],
+    influencerCategories: InfluencerCategory[];
+    platforms: string[];
+    isExperienced: boolean;
+    keywords: string[];
+  },
+}
+
+type Influencer = {
+  settings: {
+    businessCategories: BusinessCategory[],
+    influencerCategories: InfluencerCategory[];
+    platforms: string[];
+    keywords: string[];
+  },
+}
+```
+
+- Add a matches section into the dashboard for quick matches
+- Do we need a calendar/notifications tab for upcoming activity?
